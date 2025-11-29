@@ -3,14 +3,13 @@ Interfaz Gráfica del Sistema de Bazar - VERSIÓN COMPLETA ACTUALIZADA
 Usando tkinter
 """
 import tkinter as tk
-from config import COLORES, FUENTES, METODOS_PAGO  
 from tkinter import ttk, messagebox, simpledialog
 from logica import GestorProductos, GestorVentas, validar_numero
 from ventana_reportes import (VentanaInventarioVendido, VentanaTopProductos,
                               VentanaAnalisisPagos, VentanaGraficos, 
                               VentanaExportarReporte)
 import config
-
+from config import COLORES, FUENTES, METODOS_PAGO
 
 class VentanaPrincipal:
     """Ventana principal del sistema"""
@@ -56,23 +55,19 @@ class VentanaPrincipal:
         menu_productos.add_command(label="Editar Producto", command=self.ventana_editar_producto)
         menu_productos.add_command(label="Eliminar Producto", command=self.ventana_eliminar_producto)
         
-        # Menú Ventas
-        menu_ventas = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Ventas", menu=menu_ventas)
-        menu_ventas.add_command(label="Guardar Ventas", command=self.guardar_ventas)
-        menu_ventas.add_command(label="Nueva Venta", command=self.nueva_venta)
-        menu_ventas.add_command(label="Ver Historial", command=self.ver_historial)
-        
         # Menú Reportes
         menu_reportes = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Reportes", menu=menu_reportes)
+        menu_reportes.add_command(label="Guardar ventas", command=self.guardar_ventas)  
+        menu_reportes.add_command(label="📊 Reporte del Día", command=self.abrir_reporte_dia)  
+        menu_reportes.add_separator() 
         menu_reportes.add_command(label="Inventario Vendido", command=self.abrir_inventario_vendido)
         menu_reportes.add_command(label="Top Productos", command=self.abrir_top_productos)
         menu_reportes.add_command(label="Análisis de Pagos", command=self.abrir_analisis_pagos)
         menu_reportes.add_command(label="Gráficos", command=self.abrir_graficos)
         menu_reportes.add_separator()
         menu_reportes.add_command(label="Exportar Reporte Completo", command=self.abrir_exportar_reporte)
-        
+            
         # Menú Configuración
         menu_config = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Configuración", menu=menu_config)
@@ -241,7 +236,7 @@ class VentanaPrincipal:
         venta = self.gestor_ventas.agregar_venta(self.producto_seleccionado, cantidad, metodo)
         
         # Si el stock está activado, actualizarlo
-        import config
+        
         if config.STOCK_ACTIVADO:
             exito, mensaje_stock = self.gestor_productos.actualizar_stock(
                 self.producto_seleccionado['codigo'], cantidad)
@@ -729,7 +724,7 @@ class VentanaPrincipal:
         """Abre ventana para agregar producto de precio variable"""
         ventana = tk.Toplevel(self.root)
         ventana.title("Agregar Producto Variable")
-        ventana.geometry("400x300")
+        ventana.geometry("420x400")  # Aumentado de 300 a 400
         ventana.configure(bg=COLORES['fondo'])
         ventana.resizable(False, False)
         
@@ -737,12 +732,29 @@ class VentanaPrincipal:
         ventana.transient(self.root)
         ventana.grab_set()
         
+        # Frame principal con scroll
+        main_frame = tk.Frame(ventana, bg=COLORES['fondo'])
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Canvas y Scrollbar
+        canvas = tk.Canvas(main_frame, bg=COLORES['fondo'], highlightthickness=0)
+        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=COLORES['fondo'])
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
         # Título
-        tk.Label(ventana, text="Producto de Precio Variable", 
+        tk.Label(scrollable_frame, text="Producto de Precio Variable", 
                 font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=15)
         
         # Frame para campos
-        frame_campos = tk.Frame(ventana, bg=COLORES['fondo'])
+        frame_campos = tk.Frame(scrollable_frame, bg=COLORES['fondo'])
         frame_campos.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
         
         # Descripción
@@ -750,12 +762,12 @@ class VentanaPrincipal:
                 bg=COLORES['fondo']).grid(row=0, column=0, padx=10, pady=10, sticky='e')
         entry_descripcion = tk.Entry(frame_campos, font=FUENTES['normal'], width=25)
         entry_descripcion.grid(row=0, column=1, padx=10, pady=10)
-        entry_descripcion.focus()  # Foco inicial
+        entry_descripcion.focus()
         
         # Cantidad
         tk.Label(frame_campos, text="Cantidad:", font=FUENTES['normal'],
                 bg=COLORES['fondo']).grid(row=1, column=0, padx=10, pady=10, sticky='e')
-        spin_cantidad_var = tk.Spinbox(frame_campos, from_=1, to=100, width=23,
+        spin_cantidad_var = tk.Spinbox(frame_campos, from_=1, to=1000, width=23,
                                     font=FUENTES['normal'])
         spin_cantidad_var.grid(row=1, column=1, padx=10, pady=10)
         
@@ -786,7 +798,6 @@ class VentanaPrincipal:
             precio_str = entry_precio.get().strip()
             metodo = metodo_pago_var.get()
             
-            # Validaciones
             if not descripcion:
                 messagebox.showerror("Error", "Ingrese una descripción")
                 entry_descripcion.focus()
@@ -805,44 +816,47 @@ class VentanaPrincipal:
             cantidad = int(cantidad_str)
             precio = float(precio_str)
             
-            # Crear producto temporal (no se guarda en CSV)
             producto_temporal = {
-                'codigo': 'VAR',  # Código especial para productos variables
+                'codigo': 'VAR',
                 'nombre': descripcion,
                 'precio': precio,
                 'categoria': 'Varios'
             }
             
-            # Agregar venta
             venta = self.gestor_ventas.agregar_venta(producto_temporal, cantidad, metodo)
-            
-            # Actualizar interfaz
             self.agregar_item_lista(venta, len(self.gestor_ventas.ventas_actuales) - 1)
             self.actualizar_totales()
             
-            # Cerrar ventana
             ventana.destroy()
-            
-            # Mensaje de confirmación
             messagebox.showinfo("Éxito", f"'{descripcion}' agregado a la venta")
         
         # Botón Agregar
-        btn_agregar_var = tk.Button(ventana, text="Agregar a Venta", command=agregar_variable,
+        btn_agregar_var = tk.Button(scrollable_frame, text="Agregar a Venta", 
+                                    command=agregar_variable,
                                     bg=COLORES['secundario'], fg='white', 
                                     font=FUENTES['normal'], cursor='hand2',
                                     padx=30, pady=10)
         btn_agregar_var.pack(pady=15)
         
-        # Permitir Enter para agregar
-        entry_precio.bind('<Return>', lambda e: agregar_variable())
-        
         # Botón Cancelar
-        btn_cancelar = tk.Button(ventana, text="Cancelar", command=ventana.destroy,
+        btn_cancelar = tk.Button(scrollable_frame, text="Cancelar", 
+                                command=ventana.destroy,
                                 bg=COLORES['borde'], fg='white', 
                                 font=FUENTES['pequeña'], cursor='hand2',
                                 padx=20, pady=5)
         btn_cancelar.pack(pady=5)
-
+        
+        # Pack canvas y scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Permitir Enter
+        entry_precio.bind('<Return>', lambda e: agregar_variable())
+        
+        # Habilitar scroll con rueda del mouse
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
     
     # === MÉTODOS DE REPORTES ===
     
@@ -903,11 +917,10 @@ class VentanaPrincipal:
         frame_botones.pack(pady=20)
         
         def activar_stock():
-            from config import guardar_config_stock, STOCK_ACTIVADO as stock_actual
-            guardar_config_stock(True)
+            import config
+            config.guardar_config_stock(True)
             
             # Actualizar la variable global EN EL MÓDULO config
-            import config
             config.STOCK_ACTIVADO = True
             
             # Recargar productos automáticamente
@@ -962,3 +975,8 @@ class VentanaPrincipal:
                      command=ver_stock_bajo,
                      bg=COLORES['advertencia'], fg='white', font=FUENTES['normal'],
                      cursor='hand2', padx=20, pady=10).pack(pady=10)
+            
+    def abrir_reporte_dia(self):
+        """Abre ventana de reporte del día"""
+        from ventana_reportes import VentanaReporteDia
+        VentanaReporteDia(self.root)

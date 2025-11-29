@@ -27,7 +27,7 @@ class VentanaInventarioVendido:
         """Crea la interfaz de inventario"""
         # Frame de filtros
         frame_filtros = tk.LabelFrame(self.ventana, text="Filtros", 
-                                      font=FUENTES['titulo'], bg=COLORES['fondo'])
+                                    font=FUENTES['titulo'], bg=COLORES['fondo'])
         frame_filtros.pack(fill=tk.X, padx=10, pady=10)
         
         # Fechas
@@ -41,42 +41,6 @@ class VentanaInventarioVendido:
         fecha_fin = datetime.now()
         fecha_inicio = fecha_fin - timedelta(days=30)
         
-        self.entry_fecha_inicio = tk.Entry(frame_fechas, font=FUENTES['normal'], width=12)
-        self.entry_fecha_inicio.insert(0, fecha_inicio.strftime('%Y-%m-%d'))
-        self.entry_fecha_inicio.grid(row=0, column=1, padx=5)
-        
-        tk.Label(frame_fechas, text="Hasta:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=0, column=2, padx=5)
-        
-        self.entry_fecha_fin = tk.Entry(frame_fechas, font=FUENTES['normal'], width=12)
-        self.entry_fecha_fin.insert(0, fecha_fin.strftime('%Y-%m-%d'))
-        self.entry_fecha_fin.grid(row=0, column=3, padx=5)
-        
-        tk.Button(self.ventana, text="Generar y Exportar Reporte", 
-                 command=self.generar_reporte,
-                 bg=COLORES['secundario'], fg='white', font=FUENTES['titulo'],
-                 cursor='hand2', padx=30, pady=15).pack(pady=30)
-    
-    def generar_reporte(self):
-        """Genera y exporta el reporte completo"""
-        fecha_inicio = self.entry_fecha_inicio.get()
-        fecha_fin = self.entry_fecha_fin.get()
-        
-        if not self.analizador.cargar_ventas_rango(fecha_inicio, fecha_fin):
-            messagebox.showwarning("Sin datos", 
-                                  "No hay ventas registradas en el rango seleccionado")
-            return
-        
-        exito, ruta = ExportadorReportes.generar_reporte_completo(
-            self.analizador, fecha_inicio, fecha_fin
-        )
-        
-        if exito:
-            messagebox.showinfo("Éxito", 
-                              f"Reporte generado exitosamente:\n\n{ruta}\n\n"
-                              f"Puede abrirlo con Excel o cualquier editor de CSV")
-        else:
-            messagebox.showerror("Error", f"No se pudo generar el reporte: {ruta}")
         self.entry_fecha_inicio = tk.Entry(frame_fechas, font=FUENTES['normal'], width=12)
         self.entry_fecha_inicio.insert(0, fecha_inicio.strftime('%Y-%m-%d'))
         self.entry_fecha_inicio.grid(row=0, column=1, padx=5, pady=5)
@@ -611,7 +575,7 @@ class VentanaExportarReporte:
     def __init__(self, parent):
         self.ventana = tk.Toplevel(parent)
         self.ventana.title("Exportar Reporte Completo")
-        self.ventana.geometry("500x300")
+        self.ventana.geometry("500x350")
         self.ventana.configure(bg=COLORES['fondo'])
         
         self.analizador = AnalizadorVentas()
@@ -635,7 +599,280 @@ class VentanaExportarReporte:
         frame_fechas.pack(pady=20)
         
         tk.Label(frame_fechas, text="Desde:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=0, column=0, padx=5)
+                bg=COLORES['fondo']).grid(row=0, column=0, padx=5, pady=5)
         
         fecha_fin = datetime.now()
         fecha_inicio = fecha_fin - timedelta(days=30)
+        
+        self.entry_fecha_inicio = tk.Entry(frame_fechas, font=FUENTES['normal'], width=15)
+        self.entry_fecha_inicio.insert(0, fecha_inicio.strftime('%Y-%m-%d'))
+        self.entry_fecha_inicio.grid(row=0, column=1, padx=5, pady=5)
+        
+        tk.Label(frame_fechas, text="Hasta:", font=FUENTES['normal'],
+                bg=COLORES['fondo']).grid(row=0, column=2, padx=5, pady=5)
+        
+        self.entry_fecha_fin = tk.Entry(frame_fechas, font=FUENTES['normal'], width=15)
+        self.entry_fecha_fin.insert(0, fecha_fin.strftime('%Y-%m-%d'))
+        self.entry_fecha_fin.grid(row=0, column=3, padx=5, pady=5)
+        
+        tk.Label(frame_fechas, text="(YYYY-MM-DD)", font=FUENTES['pequeña'],
+                bg=COLORES['fondo'], fg='gray').grid(row=1, column=1, columnspan=3, pady=5)
+        
+        # Botón Generar
+        tk.Button(self.ventana, text="📄 Generar y Exportar Reporte", 
+                 command=self.generar_reporte,
+                 bg=COLORES['secundario'], fg='white', font=FUENTES['titulo'],
+                 cursor='hand2', padx=30, pady=15).pack(pady=30)
+    
+    def generar_reporte(self):
+        """Genera y exporta el reporte completo"""
+        fecha_inicio = self.entry_fecha_inicio.get().strip()
+        fecha_fin = self.entry_fecha_fin.get().strip()
+        
+        # Validar formato de fechas
+        try:
+            datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            datetime.strptime(fecha_fin, '%Y-%m-%d')
+        except ValueError:
+            messagebox.showerror("Error", 
+                               "Formato de fecha inválido.\n"
+                               "Use el formato: YYYY-MM-DD\n"
+                               "Ejemplo: 2024-11-29")
+            return
+        
+        # Cargar ventas
+        if not self.analizador.cargar_ventas_rango(fecha_inicio, fecha_fin):
+            messagebox.showwarning("Sin datos", 
+                                  f"No hay ventas registradas entre\n"
+                                  f"{fecha_inicio} y {fecha_fin}")
+            return
+        
+        # Generar reporte
+        exito, ruta = ExportadorReportes.generar_reporte_completo(
+            self.analizador, fecha_inicio, fecha_fin
+        )
+        
+        if exito:
+            messagebox.showinfo("✅ Éxito", 
+                              f"Reporte generado exitosamente:\n\n"
+                              f"📁 {ruta}\n\n"
+                              f"Puede abrirlo con Excel o cualquier editor de CSV")
+            self.ventana.destroy()
+        else:
+            messagebox.showerror("❌ Error", 
+                               f"No se pudo generar el reporte:\n{ruta}")
+
+
+
+class VentanaReporteDia:
+    """Ventana para reporte rápido del día"""
+    
+    def __init__(self, parent):
+        self.ventana = tk.Toplevel(parent)
+        self.ventana.title("📊 Reporte del Día")
+        self.ventana.geometry("900x700")
+        self.ventana.configure(bg=COLORES['fondo'])
+        
+        self.analizador = AnalizadorVentas()
+        self.datos = None
+        
+        self.crear_interfaz()
+        self.cargar_datos()
+    
+    def crear_interfaz(self):
+        """Crea la interfaz"""
+        from datetime import datetime
+        
+        # Encabezado
+        frame_header = tk.Frame(self.ventana, bg=COLORES['primario'])
+        frame_header.pack(fill=tk.X)
+        
+        fecha_actual = datetime.now().strftime('%A %d/%m/%Y')
+        tk.Label(frame_header, text="📊 REPORTE DEL DÍA", 
+                font=('Arial', 16, 'bold'), bg=COLORES['primario'], 
+                fg='white').pack(pady=10)
+        tk.Label(frame_header, text=f"Fecha: {fecha_actual}", 
+                font=FUENTES['normal'], bg=COLORES['primario'], 
+                fg='white').pack(pady=5)
+        
+        # Tabla de productos
+        tk.Label(self.ventana, text="Productos Vendidos:", 
+                font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=10, anchor='w', padx=20)
+        
+        frame_tabla = tk.Frame(self.ventana, bg='white')
+        frame_tabla.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        scroll_y = tk.Scrollbar(frame_tabla, orient=tk.VERTICAL)
+        scroll_x = tk.Scrollbar(frame_tabla, orient=tk.HORIZONTAL)
+        
+        columnas = ('producto', 'cantidad', 'precio_unit', 'subtotal', 'metodo')
+        self.tree = ttk.Treeview(frame_tabla, columns=columnas, show='headings',
+                                yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set,
+                                height=12)
+        
+        self.tree.heading('producto', text='Producto')
+        self.tree.heading('cantidad', text='Cantidad')
+        self.tree.heading('precio_unit', text='Precio Unitario')
+        self.tree.heading('subtotal', text='Subtotal')
+        self.tree.heading('metodo', text='Método de Pago')
+        
+        self.tree.column('producto', width=300)
+        self.tree.column('cantidad', width=100, anchor='center')
+        self.tree.column('precio_unit', width=120, anchor='center')
+        self.tree.column('subtotal', width=120, anchor='center')
+        self.tree.column('metodo', width=150, anchor='center')
+        
+        scroll_y.config(command=self.tree.yview)
+        scroll_x.config(command=self.tree.xview)
+        
+        scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+        scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Frame de resumen
+        frame_resumen = tk.Frame(self.ventana, bg='#e8f5e9', relief=tk.RAISED, bd=2)
+        frame_resumen.pack(fill=tk.X, padx=20, pady=10)
+        
+        tk.Label(frame_resumen, text="💰 RESUMEN DE PAGOS", 
+                font=FUENTES['titulo'], bg='#e8f5e9').pack(pady=10)
+        
+        self.frame_totales = tk.Frame(frame_resumen, bg='#e8f5e9')
+        self.frame_totales.pack(pady=10)
+        
+        # Total general (se llenará después)
+        self.label_total_general = tk.Label(frame_resumen, text="", 
+                                           font=('Arial', 16, 'bold'), 
+                                           fg=COLORES['secundario'], bg='#e8f5e9')
+        self.label_total_general.pack(pady=15)
+        
+        # Botones de exportación
+        frame_botones = tk.Frame(self.ventana, bg=COLORES['fondo'])
+        frame_botones.pack(pady=15)
+        
+        tk.Button(frame_botones, text="📄 Exportar CSV", 
+                 command=self.exportar_csv,
+                 bg=COLORES['secundario'], fg='white', font=FUENTES['normal'],
+                 cursor='hand2', padx=20, pady=10).pack(side=tk.LEFT, padx=10)
+        
+        tk.Button(frame_botones, text="🔄 Actualizar", 
+                 command=self.cargar_datos,
+                 bg=COLORES['primario'], fg='white', font=FUENTES['normal'],
+                 cursor='hand2', padx=20, pady=10).pack(side=tk.LEFT, padx=10)
+        
+        tk.Button(frame_botones, text="Cerrar", 
+                 command=self.ventana.destroy,
+                 bg=COLORES['borde'], fg='white', font=FUENTES['normal'],
+                 cursor='hand2', padx=20, pady=10).pack(side=tk.LEFT, padx=10)
+    
+    def cargar_datos(self):
+        """Carga los datos del día"""
+        self.datos = self.analizador.reporte_dia()
+        
+        if not self.datos:
+            messagebox.showinfo("Sin ventas", 
+                              "No hay ventas registradas el día de hoy")
+            return
+        
+        # Limpiar tabla
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        # Llenar tabla con productos
+        for producto in self.datos['productos']:
+            self.tree.insert('', tk.END, values=(
+                producto['nombre'],
+                producto['cantidad'],
+                f"S/ {producto['precio_unitario']:.2f}",
+                f"S/ {producto['subtotal']:.2f}",
+                producto['metodo_pago']
+            ))
+        
+        # Limpiar frame de totales
+        for widget in self.frame_totales.winfo_children():
+            widget.destroy()
+        
+        # Mostrar totales por método
+        metodos_orden = ['Efectivo', 'Yape', 'Plin', 'Otros']
+        for i, metodo in enumerate(metodos_orden):
+            total = self.datos['totales_metodos'][metodo]
+            porcentaje = self.datos['porcentajes'][metodo]
+            
+            frame_metodo = tk.Frame(self.frame_totales, bg='#e8f5e9')
+            frame_metodo.grid(row=i//2, column=i%2, padx=20, pady=5, sticky='w')
+            
+            tk.Label(frame_metodo, text=f"{metodo}:", 
+                    font=FUENTES['normal'], bg='#e8f5e9', width=10, 
+                    anchor='w').pack(side=tk.LEFT)
+            tk.Label(frame_metodo, text=f"S/ {total:.2f}", 
+                    font=FUENTES['normal'], bg='#e8f5e9', width=12,
+                    anchor='e', fg=COLORES['secundario'] if total > 0 else 'gray').pack(side=tk.LEFT)
+            tk.Label(frame_metodo, text=f"({porcentaje:.1f}%)", 
+                    font=FUENTES['pequeña'], bg='#e8f5e9', 
+                    fg='gray').pack(side=tk.LEFT, padx=5)
+        
+        # Total general
+        self.label_total_general.config(
+            text=f"━━━━━━━━━━━━━━━━━━━\n"
+                 f"TOTAL GENERAL: S/ {self.datos['total_general']:.2f}\n"
+                 f"({self.datos['cantidad_ventas']} ventas)"
+        )
+    
+    def exportar_csv(self):
+        """Exporta el reporte a CSV"""
+        if not self.datos:
+            messagebox.showwarning("Sin datos", "No hay datos para exportar")
+            return
+        
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        nombre = f'reporte_dia_{self.datos["fecha"]}_{timestamp}.csv'
+        
+        # Preparar datos para CSV
+        datos_csv = []
+        
+        # Encabezado
+        datos_csv.append({
+            'Sección': 'REPORTE DEL DÍA',
+            'Dato': self.datos['fecha'],
+            'Valor': ''
+        })
+        datos_csv.append({'Sección': '', 'Dato': '', 'Valor': ''})
+        
+        # Productos vendidos
+        datos_csv.append({'Sección': 'PRODUCTOS VENDIDOS', 'Dato': '', 'Valor': ''})
+        for producto in self.datos['productos']:
+            datos_csv.append({
+                'Sección': producto['nombre'],
+                'Dato': f"Cantidad: {producto['cantidad']} | Precio Unit: S/ {producto['precio_unitario']:.2f}",
+                'Valor': f"S/ {producto['subtotal']:.2f} ({producto['metodo_pago']})"
+            })
+        
+        datos_csv.append({'Sección': '', 'Dato': '', 'Valor': ''})
+        
+        # Totales por método
+        datos_csv.append({'Sección': 'TOTALES POR MÉTODO DE PAGO', 'Dato': '', 'Valor': ''})
+        for metodo, total in self.datos['totales_metodos'].items():
+            porcentaje = self.datos['porcentajes'][metodo]
+            datos_csv.append({
+                'Sección': metodo,
+                'Dato': f"S/ {total:.2f}",
+                'Valor': f"{porcentaje:.1f}%"
+            })
+        
+        datos_csv.append({'Sección': '', 'Dato': '', 'Valor': ''})
+        datos_csv.append({
+            'Sección': 'TOTAL GENERAL',
+            'Dato': f"S/ {self.datos['total_general']:.2f}",
+            'Valor': f"{self.datos['cantidad_ventas']} ventas"
+        })
+        
+        # Exportar
+        exito, ruta = ExportadorReportes.exportar_csv(
+            datos_csv, nombre, ['Sección', 'Dato', 'Valor']
+        )
+        
+        if exito:
+            messagebox.showinfo("✅ Éxito", 
+                              f"Reporte exportado exitosamente:\n\n{ruta}")
+        else:
+            messagebox.showerror("❌ Error", f"No se pudo exportar: {ruta}")

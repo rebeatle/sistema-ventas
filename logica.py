@@ -116,7 +116,7 @@ class GestorProductos:
         for p in self.productos:
             texto = f"{p['nombre']} - S/ {p['precio']:.2f}"
             # Si el stock está activado y es bajo, agregar advertencia
-            if STOCK_ACTIVADO and p['stock'] <= 500:
+            if STOCK_ACTIVADO:
                 texto += f" [STOCK: {p['stock']}]"
             resultado.append(texto)
         return resultado

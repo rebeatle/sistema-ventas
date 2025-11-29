@@ -109,8 +109,8 @@ matplotlib>=3.5.0
 
 ### 1. Clonar el Repositorio
 ```bash
-git clone https://github.com/rebeatle/sistema-bazar.git
-cd sistema-bazar
+git clone https://github.com/rebeatle/sistema-ventas.git
+cd sistema-ventas
 ```
 
 ### 2. Crear Entorno Virtual (Opcional pero Recomendado)

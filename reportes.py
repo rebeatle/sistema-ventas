@@ -226,7 +226,60 @@ class AnalizadorVentas:
             'cantidad_producto_top': producto_top[1],
             'promedio_venta_diaria': total_ventas / len(set(fechas)) if fechas else 0
         }
-
+    def reporte_dia(self):
+        """
+        Genera reporte del día actual con desglose por producto y método de pago
+        Returns: dict con productos, totales por método y total general
+        """
+        from datetime import datetime
+        
+        fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+        
+        # Cargar solo ventas de hoy
+        if not self.cargar_ventas_rango(fecha_hoy, fecha_hoy):
+            return None
+        
+        # Agrupar ventas por producto
+        productos_vendidos = []
+        for venta in self.ventas:
+            productos_vendidos.append({
+                'nombre': venta['nombre'],
+                'cantidad': venta['cantidad'],
+                'precio_unitario': venta['precio_unitario'],
+                'subtotal': venta['subtotal'],
+                'metodo_pago': METODOS_PAGO.get(venta['metodo_pago'], 'Desconocido'),
+                'metodo_codigo': venta['metodo_pago']
+            })
+        
+        # Calcular totales por método de pago
+        totales_metodos = {
+            'Efectivo': 0.0,
+            'Yape': 0.0,
+            'Plin': 0.0,
+            'Otros': 0.0
+        }
+        
+        for venta in self.ventas:
+            metodo_nombre = METODOS_PAGO.get(venta['metodo_pago'], 'Otros')
+            totales_metodos[metodo_nombre] += venta['subtotal']
+        
+        # Total general
+        total_general = sum(totales_metodos.values())
+        
+        # Calcular porcentajes
+        porcentajes = {}
+        for metodo, total in totales_metodos.items():
+            porcentaje = (total / total_general * 100) if total_general > 0 else 0
+            porcentajes[metodo] = porcentaje
+        
+        return {
+            'fecha': fecha_hoy,
+            'productos': productos_vendidos,
+            'totales_metodos': totales_metodos,
+            'porcentajes': porcentajes,
+            'total_general': total_general,
+            'cantidad_ventas': len(productos_vendidos)
+        }
 
 class GeneradorGraficos:
     """Genera gráficos usando matplotlib"""
