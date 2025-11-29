@@ -109,7 +109,7 @@ matplotlib>=3.5.0
 
 ### 1. Clonar el Repositorio
 ```bash
-git clone https://github.com/tu-usuario/sistema-bazar.git
+git clone https://github.com/rebeatle/sistema-bazar.git
 cd sistema-bazar
 ```
 
