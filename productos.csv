@@ -1,0 +1,11 @@
+codigo,nombre,precio,categoria,stock
+001,Coca Cola 500ml,3.5,Bebidas,3
+002,Inca Kola 500ml,4.5,Bebidas,0
+003,Agua San Luis 625ml,2.0,Bebidas,20
+004,Galletas Oreo,4.5,Snacks,0
+005,Papas Lays,5.0,Snacks,0
+006,Chocolate Sublime,2.5,Dulces,1
+007,Chicles Trident,1.5,Dulces,0
+008,Pan Integral,6.0,Panadería,1
+da,222,121.0,Panadería,0
+5,GUARANA,1.5,Bebidas,0
