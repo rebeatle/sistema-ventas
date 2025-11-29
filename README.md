@@ -347,13 +347,10 @@ in the Software without restriction...
 
 ## 📞 Contacto
 
-**Desarrollador**: [Tu Nombre]
+**Desarrollador**: [rebe]
 
-- 📧 Email: tu-email@ejemplo.com
-- 🐙 GitHub: [@tu-usuario](https://github.com/tu-usuario)
-- 💼 LinkedIn: [Tu Perfil](https://linkedin.com/in/tu-perfil)
 
-**Link del Proyecto**: [https://github.com/tu-usuario/sistema-bazar](https://github.com/tu-usuario/sistema-bazar)
+**Link del Proyecto**: [https://github.com/rebeatle/sistema-ventas](https://github.com/rebeatle/sistema-ventas)
 
 ---
 
@@ -363,7 +360,7 @@ in the Software without restriction...
 - [Matplotlib](https://matplotlib.org/) - Gráficos y visualizaciones
 - Comunidad de desarrolladores Python en Perú
 - Todos los que han probado y dado feedback
-
+- A mi gato
 ---
 
 ## ⭐ ¿Te gustó el proyecto?
