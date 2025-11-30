@@ -20,7 +20,6 @@ Sistema completo de punto de venta (POS) diseñado específicamente para bazares
 - [Funcionalidades Detalladas](#-funcionalidades-detalladas)
 - [Configuración](#-configuración)
 - [Contribución](#-contribución)
-- [Roadmap](#-roadmap)
 - [Licencia](#-licencia)
 - [Contacto](#-contacto)
 
@@ -306,26 +305,6 @@ fecha,hora,codigo,nombre,cantidad,precio_unitario,subtotal,metodo_pago,categoria
 - Prueba antes de enviar PR
 
 ---
-
-## 🗺️ Roadmap
-
-### Versión 1.1 (Próximamente)
-- [ ] Impresión de tickets de venta
-- [ ] Backup automático de datos
-- [ ] Modo oscuro
-- [ ] Multi-usuario con permisos
-
-### Versión 1.2 (Planificado)
-- [ ] Integración con facturación electrónica (SUNAT)
-- [ ] App móvil complementaria
-- [ ] Sincronización en la nube
-- [ ] Lector de código de barras
-
-### Versión 2.0 (Futuro)
-- [ ] Base de datos SQLite
-- [ ] Gestión de proveedores
-- [ ] Cuentas por cobrar
-- [ ] Dashboard web
 
 ---
 

@@ -575,14 +575,14 @@ class VentanaExportarReporte:
     def __init__(self, parent):
         self.ventana = tk.Toplevel(parent)
         self.ventana.title("Exportar Reporte Completo")
-        self.ventana.geometry("500x350")
+        self.ventana.geometry("500x550")
         self.ventana.configure(bg=COLORES['fondo'])
         
         self.analizador = AnalizadorVentas()
         self.crear_interfaz()
     
     def crear_interfaz(self):
-        """Crea la interfaz"""
+        """Crea la interfaz COMPLETA"""
         tk.Label(self.ventana, text="Generar Reporte Completo",
                 font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=20)
         
@@ -662,8 +662,6 @@ class VentanaExportarReporte:
             messagebox.showerror("❌ Error", 
                                f"No se pudo generar el reporte:\n{ruta}")
 
-
-
 class VentanaReporteDia:
     """Ventana para reporte rápido del día"""
     
@@ -678,7 +676,6 @@ class VentanaReporteDia:
         
         self.crear_interfaz()
         self.cargar_datos()
-    
     def crear_interfaz(self):
         """Crea la interfaz"""
         from datetime import datetime
@@ -705,22 +702,23 @@ class VentanaReporteDia:
         scroll_y = tk.Scrollbar(frame_tabla, orient=tk.VERTICAL)
         scroll_x = tk.Scrollbar(frame_tabla, orient=tk.HORIZONTAL)
         
-        columnas = ('producto', 'cantidad', 'precio_unit', 'subtotal', 'metodo')
+        # ACTUALIZADO: Nueva estructura de columnas
+        columnas = ('producto', 'cantidad', 'precio_unit', 'subtotal', 'metodos')
         self.tree = ttk.Treeview(frame_tabla, columns=columnas, show='headings',
                                 yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set,
                                 height=12)
         
         self.tree.heading('producto', text='Producto')
-        self.tree.heading('cantidad', text='Cantidad')
+        self.tree.heading('cantidad', text='Cantidad Total')
         self.tree.heading('precio_unit', text='Precio Unitario')
         self.tree.heading('subtotal', text='Subtotal')
-        self.tree.heading('metodo', text='Método de Pago')
+        self.tree.heading('metodos', text='Métodos de Pago')
         
-        self.tree.column('producto', width=300)
+        self.tree.column('producto', width=250)
         self.tree.column('cantidad', width=100, anchor='center')
         self.tree.column('precio_unit', width=120, anchor='center')
         self.tree.column('subtotal', width=120, anchor='center')
-        self.tree.column('metodo', width=150, anchor='center')
+        self.tree.column('metodos', width=200, anchor='center')
         
         scroll_y.config(command=self.tree.yview)
         scroll_x.config(command=self.tree.xview)
@@ -777,14 +775,14 @@ class VentanaReporteDia:
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Llenar tabla con productos
+        # Llenar tabla con productos AGRUPADOS
         for producto in self.datos['productos']:
             self.tree.insert('', tk.END, values=(
                 producto['nombre'],
-                producto['cantidad'],
+                producto['cantidad'],  # Cantidad total agrupada
                 f"S/ {producto['precio_unitario']:.2f}",
                 f"S/ {producto['subtotal']:.2f}",
-                producto['metodo_pago']
+                producto['metodos_pago']  # "Efectivo (2), Yape (1)"
             ))
         
         # Limpiar frame de totales
@@ -811,12 +809,13 @@ class VentanaReporteDia:
                     fg='gray').pack(side=tk.LEFT, padx=5)
         
         # Total general
+        total_productos = len(self.datos['productos'])
         self.label_total_general.config(
             text=f"━━━━━━━━━━━━━━━━━━━\n"
                  f"TOTAL GENERAL: S/ {self.datos['total_general']:.2f}\n"
-                 f"({self.datos['cantidad_ventas']} ventas)"
+                 f"({total_productos} productos diferentes | {self.datos['cantidad_ventas']} transacciones)"
         )
-    
+
     def exportar_csv(self):
         """Exporta el reporte a CSV"""
         if not self.datos:

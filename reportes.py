@@ -229,9 +229,10 @@ class AnalizadorVentas:
     def reporte_dia(self):
         """
         Genera reporte del día actual con desglose por producto y método de pago
-        Returns: dict con productos, totales por método y total general
+        Returns: dict con productos AGRUPADOS, totales por método y total general
         """
         from datetime import datetime
+        from collections import defaultdict
         
         fecha_hoy = datetime.now().strftime('%Y-%m-%d')
         
@@ -239,17 +240,51 @@ class AnalizadorVentas:
         if not self.cargar_ventas_rango(fecha_hoy, fecha_hoy):
             return None
         
-        # Agrupar ventas por producto
-        productos_vendidos = []
+        # NUEVO: Agrupar ventas por producto y método de pago
+        productos_agrupados = defaultdict(lambda: {
+            'cantidad_total': 0,
+            'precio_unitario': 0.0,
+            'subtotal_total': 0.0,
+            'desglose_metodos': defaultdict(lambda: {'cantidad': 0, 'subtotal': 0.0})
+        })
+        
         for venta in self.ventas:
+            codigo = venta['codigo']
+            nombre = venta['nombre']
+            metodo = venta['metodo_pago']
+            key = f"{codigo}|{nombre}"  # Clave única por producto
+            
+            # Acumular totales por producto
+            productos_agrupados[key]['cantidad_total'] += venta['cantidad']
+            productos_agrupados[key]['precio_unitario'] = venta['precio_unitario']  # Toma el último (debería ser siempre igual)
+            productos_agrupados[key]['subtotal_total'] += venta['subtotal']
+            
+            # Acumular por método de pago
+            productos_agrupados[key]['desglose_metodos'][metodo]['cantidad'] += venta['cantidad']
+            productos_agrupados[key]['desglose_metodos'][metodo]['subtotal'] += venta['subtotal']
+        
+        # Convertir a lista para la interfaz
+        productos_vendidos = []
+        for key, datos in productos_agrupados.items():
+            codigo, nombre = key.split('|', 1)
+            
+            # Crear string de métodos de pago
+            metodos_str = []
+            for metodo_cod, metodo_datos in datos['desglose_metodos'].items():
+                metodo_nombre = METODOS_PAGO.get(metodo_cod, 'Desconocido')
+                metodos_str.append(f"{metodo_nombre} ({metodo_datos['cantidad']})")
+            
             productos_vendidos.append({
-                'nombre': venta['nombre'],
-                'cantidad': venta['cantidad'],
-                'precio_unitario': venta['precio_unitario'],
-                'subtotal': venta['subtotal'],
-                'metodo_pago': METODOS_PAGO.get(venta['metodo_pago'], 'Desconocido'),
-                'metodo_codigo': venta['metodo_pago']
+                'codigo': codigo,
+                'nombre': nombre,
+                'cantidad': datos['cantidad_total'],
+                'precio_unitario': datos['precio_unitario'],
+                'subtotal': datos['subtotal_total'],
+                'metodos_pago': ', '.join(metodos_str)  # "Efectivo (3), Yape (2)"
             })
+        
+        # Ordenar por nombre
+        productos_vendidos.sort(key=lambda x: x['nombre'])
         
         # Calcular totales por método de pago
         totales_metodos = {
@@ -278,7 +313,7 @@ class AnalizadorVentas:
             'totales_metodos': totales_metodos,
             'porcentajes': porcentajes,
             'total_general': total_general,
-            'cantidad_ventas': len(productos_vendidos)
+            'cantidad_ventas': len(self.ventas)  # Total de transacciones
         }
 
 class GeneradorGraficos:
