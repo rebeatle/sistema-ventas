@@ -2,9 +2,28 @@
 Configuración del Sistema de Bazar
 """
 import os
+import sys
+
+# ============================================
+# CORRECCIÓN PARA EJECUTABLES PyInstaller
+# ============================================
+def obtener_ruta_base():
+    """
+    Obtiene la ruta base del programa.
+    Funciona tanto para .py como para .exe
+    """
+    if getattr(sys, 'frozen', False):
+        # Corriendo como ejecutable (.exe)
+        # sys.executable es la ruta del .exe
+        ruta = os.path.dirname(sys.executable)
+    else:
+        # Corriendo como script (.py)
+        ruta = os.path.dirname(os.path.abspath(__file__))
+    
+    return ruta
 
 # Rutas de archivos
-RUTA_BASE = os.path.dirname(os.path.abspath(__file__))
+RUTA_BASE = obtener_ruta_base()
 RUTA_PRODUCTOS = os.path.join(RUTA_BASE, "productos.csv")
 RUTA_VENTAS = os.path.join(RUTA_BASE, "ventas")
 RUTA_CONFIG_STOCK = os.path.join(RUTA_BASE, "config_stock.txt")
@@ -72,4 +91,4 @@ def guardar_config_stock(activado):
         return False
 
 # Variable global para control de stock
-STOCK_ACTIVADO = cargar_config_stock()  
+STOCK_ACTIVADO = cargar_config_stock()
