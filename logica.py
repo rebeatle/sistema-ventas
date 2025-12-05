@@ -6,7 +6,7 @@ import csv
 import os
 from datetime import datetime
 from config import *
-
+import json
 
 class GestorProductos:
     """Maneja la carga, guardado y manipulación de productos"""
@@ -158,6 +158,8 @@ class GestorVentas:
     
     def __init__(self):
         self.ventas_actuales = []
+        self.ventas_guardadas_hoy = []  # ✅ NUEVO: rastrea ventas ya guardadas
+        self.ruta_temporal = os.path.join(RUTA_BASE, 'ventas_temp.json')
     
     def agregar_venta(self, producto, cantidad, metodo_pago):
         """Agrega una venta a la lista actual"""
@@ -192,9 +194,51 @@ class GestorVentas:
             'efectivo': total_efectivo,
             'virtual': total_virtual
         }
+    def guardar_temporal(self):
+        """Guarda las ventas actuales en archivo temporal (BACKUP AUTOMÁTICO)"""
+        try:
+            datos_temp = {
+                'fecha': datetime.now().strftime('%Y-%m-%d'),
+                'hora_ultimo_guardado': datetime.now().strftime('%H:%M:%S'),
+                'ventas': self.ventas_actuales
+            }
+            with open(self.ruta_temporal, 'w', encoding='utf-8') as f:
+                json.dump(datos_temp, f, ensure_ascii=False, indent=2)
+            return True
+        except Exception as e:
+            print(f"Error al guardar temporal: {e}")
+            return False
     
+    def cargar_temporal(self):
+        """Carga las ventas temporales si existen y son del día actual"""
+        if not os.path.exists(self.ruta_temporal):
+            return False, "No hay sesión anterior"
+        
+        try:
+            with open(self.ruta_temporal, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+            
+            fecha_temp = datos.get('fecha', '')
+            fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+            
+            if fecha_temp != fecha_hoy:
+                return False, "La sesión anterior es de otro día"
+            
+            self.ventas_actuales = datos.get('ventas', [])
+            return True, f"Sesión recuperada ({len(self.ventas_actuales)} productos)"
+        except Exception as e:
+            return False, f"Error al cargar sesión: {e}"
+    
+    def limpiar_temporal(self):
+        """Elimina el archivo temporal"""
+        try:
+            if os.path.exists(self.ruta_temporal):
+                os.remove(self.ruta_temporal)
+            return True
+        except:
+            return False
     def guardar_ventas(self):
-        """Guarda las ventas actuales en el archivo del día"""
+        """Guarda las ventas actuales EN EL ARCHIVO DEFINITIVO"""
         if not self.ventas_actuales:
             return False, "No hay ventas para guardar"
         
@@ -203,15 +247,12 @@ class GestorVentas:
         hora_str = fecha_actual.strftime('%H:%M:%S')
         
         nombre_archivo = os.path.join(RUTA_VENTAS, f'ventas_{fecha_str}.csv')
-        
-        # Verificar si el archivo existe
         archivo_existe = os.path.exists(nombre_archivo)
         
         try:
             with open(nombre_archivo, 'a', newline='', encoding='utf-8') as archivo:
                 escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS_VENTAS)
                 
-                # Escribir encabezado solo si el archivo es nuevo
                 if not archivo_existe:
                     escritor.writeheader()
                 
@@ -221,7 +262,12 @@ class GestorVentas:
                     venta['hora'] = hora_str
                     escritor.writerow(venta)
             
-            return True, f"Ventas guardadas en {nombre_archivo}"
+            # ✅ NUEVO: Limpiar lista automáticamente después de guardar
+            self.ventas_guardadas_hoy.extend(self.ventas_actuales)
+            self.ventas_actuales = []
+            self.limpiar_temporal()
+            
+            return True, f"✅ Ventas guardadas exitosamente\n\nArchivo: {nombre_archivo}\n\nLa lista de ventas ha sido limpiada."
         except Exception as e:
             return False, f"Error al guardar ventas: {e}"
     

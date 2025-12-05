@@ -27,14 +27,68 @@ class VentanaPrincipal:
         # Variables
         self.producto_seleccionado = None
         
+        # ✅ NUEVO: Recuperar sesión anterior
+        self.recuperar_sesion_anterior()
+        
         # Crear interfaz
         self.crear_menu()
         self.crear_seccion_busqueda()
         self.crear_lista_ventas()
         self.crear_totales()
         
-        # Actualizar lista de productos
-        self.actualizar_combobox()
+        # Actualizar
+        self.actualizar_productos_dict()
+        
+        # ✅ NUEVO: Guardar al cerrar
+        self.root.protocol("WM_DELETE_WINDOW", self.al_cerrar)
+    
+    def recuperar_sesion_anterior(self):
+        """Pregunta si desea recuperar la sesión anterior"""
+        exito, mensaje = self.gestor_ventas.cargar_temporal()
+        
+        if exito:
+            respuesta = messagebox.askyesno(
+                "Recuperar Sesión",
+                f"Se encontró una sesión anterior del día de hoy.\n\n{mensaje}\n\n¿Desea recuperarla?",
+                icon='question'
+            )
+            
+            if respuesta:
+                # La sesión ya está cargada en ventas_actuales
+                messagebox.showinfo("Sesión Recuperada", 
+                                "Las ventas anteriores han sido restauradas.\n"
+                                "Puede continuar donde lo dejó.")
+            else:
+                # Limpiar si no quiere recuperar
+                self.gestor_ventas.ventas_actuales = []
+                self.gestor_ventas.limpiar_temporal()
+
+    def al_cerrar(self):
+        """Maneja el cierre de la ventana"""
+        if self.gestor_ventas.ventas_actuales:
+            respuesta = messagebox.askyesnocancel(
+                "Cerrar Sistema",
+                "Hay ventas sin guardar en el archivo definitivo.\n\n"
+                "• SÍ: Guardar y cerrar\n"
+                "• NO: Cerrar sin guardar (se mantendrá el respaldo automático)\n"
+                "• CANCELAR: No cerrar",
+                icon='warning'
+            )
+            
+            if respuesta is None:  # Cancelar
+                return
+            elif respuesta:  # Sí - Guardar
+                exito, mensaje = self.gestor_ventas.guardar_ventas()
+                if exito:
+                    self.root.destroy()
+                else:
+                    messagebox.showerror("Error", mensaje)
+                    return
+            else:  # No - Solo cerrar
+                self.root.destroy()
+        else:
+            self.root.destroy()  
+    
     
     def crear_menu(self):
         """Crea el menú superior"""
@@ -74,7 +128,7 @@ class VentanaPrincipal:
         menu_config.add_command(label="Gestión de Stock", command=self.configurar_stock)
     
     def crear_seccion_busqueda(self):
-        """Crea la sección de búsqueda de productos"""
+        """Crea la sección de búsqueda de productos CON AUTOCOMPLETADO"""
         frame_busqueda = tk.Frame(self.root, bg=COLORES['fondo'], pady=10)
         frame_busqueda.pack(fill=tk.X, padx=10)
         
@@ -82,17 +136,28 @@ class VentanaPrincipal:
         tk.Label(frame_busqueda, text="Producto:", font=FUENTES['normal'], 
                 bg=COLORES['fondo']).pack(side=tk.LEFT, padx=5)
         
-        # Combobox con búsqueda
-        self.combo_productos = ttk.Combobox(frame_busqueda, width=40, font=FUENTES['normal'])
-        self.combo_productos.pack(side=tk.LEFT, padx=5)
-        self.combo_productos.bind('<<ComboboxSelected>>', self.seleccionar_producto)
+        # Frame para Entry + Listbox
+        self.frame_autocompletado = tk.Frame(frame_busqueda, bg=COLORES['fondo'])
+        self.frame_autocompletado.pack(side=tk.LEFT, padx=5)
+        
+        # Entry para búsqueda
+        self.entry_busqueda = tk.Entry(self.frame_autocompletado, font=FUENTES['normal'], width=40)
+        self.entry_busqueda.pack()
+        self.entry_busqueda.bind('<KeyRelease>', self.filtrar_productos)
+        self.entry_busqueda.bind('<Down>', self.mover_seleccion_abajo)
+        
+        # Listbox flotante (inicialmente oculto)
+        self.listbox_productos = tk.Listbox(self.frame_autocompletado, font=FUENTES['normal'], 
+                                            height=6, width=40)
+        self.listbox_productos.bind('<<ListboxSelect>>', self.seleccionar_de_listbox)
+        self.listbox_productos.bind('<Return>', self.seleccionar_de_listbox)
         
         # Cantidad
         tk.Label(frame_busqueda, text="Cant:", font=FUENTES['normal'], 
                 bg=COLORES['fondo']).pack(side=tk.LEFT, padx=5)
         
         self.spin_cantidad = tk.Spinbox(frame_busqueda, from_=1, to=100, width=5, 
-                                       font=FUENTES['normal'])
+                                    font=FUENTES['normal'])
         self.spin_cantidad.pack(side=tk.LEFT, padx=5)
         
         # Métodos de pago
@@ -105,7 +170,7 @@ class VentanaPrincipal:
         
         for codigo, nombre in METODOS_PAGO.items():
             rb = tk.Radiobutton(frame_metodos, text=codigo, variable=self.metodo_pago, 
-                               value=codigo, font=FUENTES['pequeña'], bg=COLORES['fondo'])
+                            value=codigo, font=FUENTES['pequeña'], bg=COLORES['fondo'])
             rb.pack(side=tk.LEFT, padx=2)
         
         # Botón Agregar
@@ -114,11 +179,64 @@ class VentanaPrincipal:
                             cursor='hand2', padx=15)
         btn_agregar.pack(side=tk.LEFT, padx=5)
 
-        # Botón Otro (producto variable)
+        # Botón Otro
         btn_otro = tk.Button(frame_busqueda, text="Otro", command=self.agregar_producto_variable,
                             bg=COLORES['primario'], fg='white', font=FUENTES['normal'],
                             cursor='hand2', padx=15)
         btn_otro.pack(side=tk.LEFT, padx=5)
+        
+        # Variable para productos completos
+        self.productos_dict = {}
+
+    def filtrar_productos(self, event):
+        """Filtra productos mientras se escribe"""
+        texto = self.entry_busqueda.get().lower()
+        
+        if not texto:
+            self.listbox_productos.pack_forget()
+            return
+        
+        # Limpiar listbox
+        self.listbox_productos.delete(0, tk.END)
+        
+        # Filtrar productos
+        coincidencias = []
+        for producto in self.gestor_productos.productos:
+            nombre_completo = f"{producto['nombre']} - S/ {producto['precio']:.2f}"
+            if config.STOCK_ACTIVADO:
+                nombre_completo += f" [STOCK: {producto['stock']}]"
+            
+            if texto in producto['nombre'].lower() or texto in producto['codigo'].lower():
+                coincidencias.append((nombre_completo, producto))
+        
+        # Mostrar coincidencias
+        if coincidencias:
+            for nombre_completo, producto in coincidencias[:10]:  # Limitar a 10
+                self.listbox_productos.insert(tk.END, nombre_completo)
+                self.productos_dict[nombre_completo] = producto
+            
+            self.listbox_productos.pack()
+            self.listbox_productos.config(height=min(len(coincidencias), 6))
+        else:
+            self.listbox_productos.pack_forget()
+
+    def mover_seleccion_abajo(self, event):
+        """Permite navegar con flecha abajo al listbox"""
+        if self.listbox_productos.winfo_ismapped():
+            self.listbox_productos.focus_set()
+            self.listbox_productos.selection_set(0)
+
+    def seleccionar_de_listbox(self, event):
+        """Selecciona un producto del listbox"""
+        if not self.listbox_productos.curselection():
+            return
+        
+        seleccion = self.listbox_productos.get(self.listbox_productos.curselection())
+        self.entry_busqueda.delete(0, tk.END)
+        self.entry_busqueda.insert(0, seleccion)
+        self.producto_seleccionado = self.productos_dict[seleccion]
+        self.listbox_productos.pack_forget()
+        self.spin_cantidad.focus_set()
     
     def crear_lista_ventas(self):
         """Crea la lista de productos vendidos con scroll"""
@@ -235,31 +353,40 @@ class VentanaPrincipal:
         # Agregar venta
         venta = self.gestor_ventas.agregar_venta(self.producto_seleccionado, cantidad, metodo)
         
-        # Si el stock está activado, actualizarlo
-        
+        # Control de stock
         if config.STOCK_ACTIVADO:
             exito, mensaje_stock = self.gestor_productos.actualizar_stock(
                 self.producto_seleccionado['codigo'], cantidad)
             if not exito:
                 messagebox.showerror("Error de Stock", mensaje_stock)
-                # Eliminar la venta que acabamos de agregar
                 self.gestor_ventas.eliminar_venta(len(self.gestor_ventas.ventas_actuales) - 1)
                 return
             elif "ADVERTENCIA" in mensaje_stock:
                 messagebox.showwarning("Advertencia", mensaje_stock)
         
+        # ✅ GUARDADO AUTOMÁTICO
+        self.gestor_ventas.guardar_temporal()
+        
         # Actualizar interfaz
         self.agregar_item_lista(venta, len(self.gestor_ventas.ventas_actuales) - 1)
         self.actualizar_totales()
-        
-        # Actualizar combobox para reflejar cambios de stock
-        self.actualizar_combobox()
+        self.actualizar_productos_dict()
         
         # Limpiar selección
-        self.combo_productos.set('')
+        self.entry_busqueda.delete(0, tk.END)
         self.spin_cantidad.delete(0, tk.END)
         self.spin_cantidad.insert(0, '1')
         self.producto_seleccionado = None
+        self.entry_busqueda.focus_set()
+
+    def actualizar_productos_dict(self):
+        """Actualiza el diccionario de productos después de cambios en stock"""
+        self.productos_dict = {}
+        for producto in self.gestor_productos.productos:
+            nombre_completo = f"{producto['nombre']} - S/ {producto['precio']:.2f}"
+            if config.STOCK_ACTIVADO:
+                nombre_completo += f" [STOCK: {producto['stock']}]"
+            self.productos_dict[nombre_completo] = producto
     
     def agregar_item_lista(self, venta, indice):
         """Agrega un item visual a la lista"""
@@ -285,12 +412,10 @@ class VentanaPrincipal:
     
     def eliminar_item(self, indice):
         """Elimina un item de la lista"""
-
         # Si el stock está activado, devolver las unidades
         import config
         if config.STOCK_ACTIVADO and indice < len(self.gestor_ventas.ventas_actuales):
             venta = self.gestor_ventas.ventas_actuales[indice]
-            # Devolver stock (sumar cantidad)
             for producto in self.gestor_productos.productos:
                 if producto['codigo'] == venta['codigo']:
                     producto['stock'] += venta['cantidad']
@@ -298,9 +423,12 @@ class VentanaPrincipal:
                     break
         
         if self.gestor_ventas.eliminar_venta(indice):
+            # ✅ GUARDADO AUTOMÁTICO
+            self.gestor_ventas.guardar_temporal()
+            
             self.actualizar_lista()
             self.actualizar_totales()
-            self.actualizar_combobox()
+            self.actualizar_productos_dict()
     
     def actualizar_lista(self):
         """Actualiza la lista visual de ventas"""
@@ -323,7 +451,7 @@ class VentanaPrincipal:
         self.label_total_virtual.config(text=f"S/ {totales['virtual']:.2f}")
     
     def guardar_ventas(self):
-        """Guarda las ventas actuales"""
+        """Guarda las ventas actuales DEFINITIVAMENTE"""
         if not self.gestor_ventas.ventas_actuales:
             messagebox.showwarning("Advertencia", "No hay ventas para guardar")
             return
@@ -331,21 +459,12 @@ class VentanaPrincipal:
         exito, mensaje = self.gestor_ventas.guardar_ventas()
         if exito:
             messagebox.showinfo("Éxito", mensaje)
-            self.nueva_venta()
+            # ✅ NUEVO: Las ventas ya se limpiaron automáticamente en guardar_ventas()
+            self.actualizar_lista()
+            self.actualizar_totales()
         else:
             messagebox.showerror("Error", mensaje)
     
-    def nueva_venta(self):
-        """Limpia todo para comenzar una nueva venta"""
-        if self.gestor_ventas.ventas_actuales:
-            respuesta = messagebox.askyesno("Confirmar", 
-                                           "¿Desea iniciar una nueva venta? Se perderán los datos actuales si no los guardó.")
-            if not respuesta:
-                return
-        
-        self.gestor_ventas.limpiar_ventas()
-        self.actualizar_lista()
-        self.actualizar_totales()
     
     def recargar_productos(self):
         """Recarga los productos del CSV"""
@@ -724,7 +843,7 @@ class VentanaPrincipal:
         """Abre ventana para agregar producto de precio variable"""
         ventana = tk.Toplevel(self.root)
         ventana.title("Agregar Producto Variable")
-        ventana.geometry("420x400")  # Aumentado de 300 a 400
+        ventana.geometry("420x400")
         ventana.configure(bg=COLORES['fondo'])
         ventana.resizable(False, False)
         
@@ -761,9 +880,14 @@ class VentanaPrincipal:
         tk.Label(frame_campos, text="Descripción:", font=FUENTES['normal'],
                 bg=COLORES['fondo']).grid(row=0, column=0, padx=10, pady=10, sticky='e')
         entry_descripcion = tk.Entry(frame_campos, font=FUENTES['normal'], width=25)
-        entry_descripcion.grid(row=0, column=1, padx=10, pady=10)
-        entry_descripcion.focus()
         
+        # ✅ NUEVO: Pre-llenar con "otros"
+        entry_descripcion.insert(0, "otros")
+        entry_descripcion.select_range(0, tk.END)  # Seleccionar todo el texto
+        
+        entry_descripcion.grid(row=0, column=1, padx=10, pady=10)
+        entry_descripcion.focus()  
+          
         # Cantidad
         tk.Label(frame_campos, text="Cantidad:", font=FUENTES['normal'],
                 bg=COLORES['fondo']).grid(row=1, column=0, padx=10, pady=10, sticky='e')
