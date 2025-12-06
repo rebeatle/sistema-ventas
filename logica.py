@@ -1,12 +1,11 @@
 """
-Lógica de Negocio del Sistema de Bazar - ACTUALIZADO CON STOCK
+Lógica de Negocio del Sistema de Bazar - VERSIÓN LIMPIA
 Manejo de CSV, validaciones y cálculos
 """
 import csv
 import os
 from datetime import datetime
 from config import *
-import json
 
 class GestorProductos:
     """Maneja la carga, guardado y manipulación de productos"""
@@ -115,7 +114,7 @@ class GestorProductos:
         resultado = []
         for p in self.productos:
             texto = f"{p['nombre']} - S/ {p['precio']:.2f}"
-            # Si el stock está activado y es bajo, agregar advertencia
+            # Si el stock está activado, mostrar stock
             if STOCK_ACTIVADO:
                 texto += f" [STOCK: {p['stock']}]"
             resultado.append(texto)
@@ -151,6 +150,30 @@ class GestorProductos:
             return []
         
         return [p for p in self.productos if p['stock'] <= umbral]
+    
+    def obtener_siguiente_codigo_variable(self):
+        """
+        Genera el siguiente código para productos variables (VAR001, VAR002, etc.)
+        """
+        codigos_var = [p['codigo'] for p in self.productos if p['codigo'].startswith('VAR')]
+        
+        if not codigos_var:
+            return 'VAR001'
+        
+        # Extraer números y encontrar el máximo
+        numeros = []
+        for cod in codigos_var:
+            try:
+                num = int(cod.replace('VAR', ''))
+                numeros.append(num)
+            except:
+                continue
+        
+        if not numeros:
+            return 'VAR001'
+        
+        siguiente = max(numeros) + 1
+        return f'VAR{siguiente:03d}'  # VAR001, VAR002, etc.
 
 
 class GestorVentas:
@@ -158,8 +181,6 @@ class GestorVentas:
     
     def __init__(self):
         self.ventas_actuales = []
-        self.ventas_guardadas_hoy = []  # ✅ NUEVO: rastrea ventas ya guardadas
-        self.ruta_temporal = os.path.join(RUTA_BASE, 'ventas_temp.json')
     
     def agregar_venta(self, producto, cantidad, metodo_pago):
         """Agrega una venta a la lista actual"""
@@ -194,51 +215,9 @@ class GestorVentas:
             'efectivo': total_efectivo,
             'virtual': total_virtual
         }
-    def guardar_temporal(self):
-        """Guarda las ventas actuales en archivo temporal (BACKUP AUTOMÁTICO)"""
-        try:
-            datos_temp = {
-                'fecha': datetime.now().strftime('%Y-%m-%d'),
-                'hora_ultimo_guardado': datetime.now().strftime('%H:%M:%S'),
-                'ventas': self.ventas_actuales
-            }
-            with open(self.ruta_temporal, 'w', encoding='utf-8') as f:
-                json.dump(datos_temp, f, ensure_ascii=False, indent=2)
-            return True
-        except Exception as e:
-            print(f"Error al guardar temporal: {e}")
-            return False
     
-    def cargar_temporal(self):
-        """Carga las ventas temporales si existen y son del día actual"""
-        if not os.path.exists(self.ruta_temporal):
-            return False, "No hay sesión anterior"
-        
-        try:
-            with open(self.ruta_temporal, 'r', encoding='utf-8') as f:
-                datos = json.load(f)
-            
-            fecha_temp = datos.get('fecha', '')
-            fecha_hoy = datetime.now().strftime('%Y-%m-%d')
-            
-            if fecha_temp != fecha_hoy:
-                return False, "La sesión anterior es de otro día"
-            
-            self.ventas_actuales = datos.get('ventas', [])
-            return True, f"Sesión recuperada ({len(self.ventas_actuales)} productos)"
-        except Exception as e:
-            return False, f"Error al cargar sesión: {e}"
-    
-    def limpiar_temporal(self):
-        """Elimina el archivo temporal"""
-        try:
-            if os.path.exists(self.ruta_temporal):
-                os.remove(self.ruta_temporal)
-            return True
-        except:
-            return False
     def guardar_ventas(self):
-        """Guarda las ventas actuales EN EL ARCHIVO DEFINITIVO"""
+        """Guarda las ventas actuales EN EL ARCHIVO DEFINITIVO y limpia la lista"""
         if not self.ventas_actuales:
             return False, "No hay ventas para guardar"
         
@@ -262,17 +241,25 @@ class GestorVentas:
                     venta['hora'] = hora_str
                     escritor.writerow(venta)
             
-            # ✅ NUEVO: Limpiar lista automáticamente después de guardar
-            self.ventas_guardadas_hoy.extend(self.ventas_actuales)
-            self.ventas_actuales = []
-            self.limpiar_temporal()
+            # Calcular totales antes de limpiar
+            totales = self.calcular_totales()
+            num_productos = len(self.ventas_actuales)
             
-            return True, f"✅ Ventas guardadas exitosamente\n\nArchivo: {nombre_archivo}\n\nLa lista de ventas ha sido limpiada."
+            # Limpiar lista automáticamente después de guardar
+            self.ventas_actuales = []
+            
+            return True, {
+                'archivo': nombre_archivo,
+                'total': totales['general'],
+                'efectivo': totales['efectivo'],
+                'virtual': totales['virtual'],
+                'productos': num_productos
+            }
         except Exception as e:
             return False, f"Error al guardar ventas: {e}"
     
     def limpiar_ventas(self):
-        """Limpia la lista de ventas actuales"""
+        """Limpia la lista de ventas actuales (EMERGENCIA)"""
         self.ventas_actuales = []
     
     def obtener_ventas(self):
@@ -281,7 +268,6 @@ class GestorVentas:
     
     def obtener_historial(self, fecha=None):
         """Lee el historial de ventas de una fecha específica o todas"""
-        import os
         historial = []
         
         if fecha:

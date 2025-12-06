@@ -1,5 +1,5 @@
 """
-Configuración del Sistema de Bazar
+Configuración del Sistema de Bazar - VERSIÓN LIMPIA
 """
 import os
 import sys
@@ -25,7 +25,7 @@ def obtener_ruta_base():
 # Rutas de archivos
 RUTA_BASE = obtener_ruta_base()
 RUTA_PRODUCTOS = os.path.join(RUTA_BASE, "productos.csv")
-RUTA_VENTAS = os.path.join(RUTA_BASE, "ventas")
+RUTA_VENTAS = os.path.join(RUTA_BASE, "ventas_diarias")  # ✅ CAMBIO: Nueva carpeta
 RUTA_CONFIG_STOCK = os.path.join(RUTA_BASE, "config_stock.txt")
 
 # Crear carpeta de ventas si no existe

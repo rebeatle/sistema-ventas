@@ -1,0 +1,9 @@
+fecha,hora,codigo,nombre,cantidad,precio_unitario,subtotal,metodo_pago,categoria
+2025-12-06,13:42:00,VAR001,dat,1,1.0,1.0,E,Varios
+2025-12-06,13:42:00,007,Chicles Trident,1,1.5,1.5,E,Dulces
+2025-12-06,13:42:00,001,Coca Cola 500ml,1,3.5,3.5,P,Bebidas
+2025-12-06,13:42:00,005,Papas Lays,3,5.0,15.0,Y,Snacks
+2025-12-06,13:42:00,006,Chocolate Sublime,3,2.5,7.5,E,Dulces
+2025-12-06,13:42:55,001,Coca Cola 500ml,1,3.5,3.5,E,Bebidas
+2025-12-06,13:43:34,003,Agua San Luis 625ml,6,2.0,12.0,E,Bebidas
+2025-12-06,13:44:46,003,Agua San Luis 625ml,2,2.0,4.0,P,Bebidas

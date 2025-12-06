@@ -1,13 +1,11 @@
 """
-Interfaz Gráfica del Sistema de Bazar - VERSIÓN COMPLETA ACTUALIZADA
+Interfaz Gráfica del Sistema de Bazar - VERSIÓN LIMPIA
 Usando tkinter
 """
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from logica import GestorProductos, GestorVentas, validar_numero
-from ventana_reportes import (VentanaInventarioVendido, VentanaTopProductos,
-                              VentanaAnalisisPagos, VentanaGraficos, 
-                              VentanaExportarReporte)
+from ventana_reportes import VentanaInventarioVendido, VentanaReporteDia
 import config
 from config import COLORES, FUENTES, METODOS_PAGO
 
@@ -27,9 +25,6 @@ class VentanaPrincipal:
         # Variables
         self.producto_seleccionado = None
         
-        # ✅ NUEVO: Recuperar sesión anterior
-        self.recuperar_sesion_anterior()
-        
         # Crear interfaz
         self.crear_menu()
         self.crear_seccion_busqueda()
@@ -39,56 +34,47 @@ class VentanaPrincipal:
         # Actualizar
         self.actualizar_productos_dict()
         
-        # ✅ NUEVO: Guardar al cerrar
+        # Manejar cierre de ventana
         self.root.protocol("WM_DELETE_WINDOW", self.al_cerrar)
     
-    def recuperar_sesion_anterior(self):
-        """Pregunta si desea recuperar la sesión anterior"""
-        exito, mensaje = self.gestor_ventas.cargar_temporal()
-        
-        if exito:
-            respuesta = messagebox.askyesno(
-                "Recuperar Sesión",
-                f"Se encontró una sesión anterior del día de hoy.\n\n{mensaje}\n\n¿Desea recuperarla?",
-                icon='question'
-            )
-            
-            if respuesta:
-                # La sesión ya está cargada en ventas_actuales
-                messagebox.showinfo("Sesión Recuperada", 
-                                "Las ventas anteriores han sido restauradas.\n"
-                                "Puede continuar donde lo dejó.")
-            else:
-                # Limpiar si no quiere recuperar
-                self.gestor_ventas.ventas_actuales = []
-                self.gestor_ventas.limpiar_temporal()
-
     def al_cerrar(self):
         """Maneja el cierre de la ventana"""
         if self.gestor_ventas.ventas_actuales:
             respuesta = messagebox.askyesnocancel(
                 "Cerrar Sistema",
-                "Hay ventas sin guardar en el archivo definitivo.\n\n"
-                "• SÍ: Guardar y cerrar\n"
-                "• NO: Cerrar sin guardar (se mantendrá el respaldo automático)\n"
+                "Hay ventas sin guardar.\n\n"
+                "• SÍ: Cerrar caja y salir\n"
+                "• NO: Salir sin guardar\n"
                 "• CANCELAR: No cerrar",
                 icon='warning'
             )
             
             if respuesta is None:  # Cancelar
                 return
-            elif respuesta:  # Sí - Guardar
-                exito, mensaje = self.gestor_ventas.guardar_ventas()
+            elif respuesta:  # Sí - Cerrar caja
+                exito, resultado = self.gestor_ventas.guardar_ventas()
                 if exito:
+                    self.mostrar_resumen_cierre(resultado)
                     self.root.destroy()
                 else:
-                    messagebox.showerror("Error", mensaje)
+                    messagebox.showerror("Error", resultado)
                     return
             else:  # No - Solo cerrar
                 self.root.destroy()
         else:
-            self.root.destroy()  
+            self.root.destroy()
     
+    def mostrar_resumen_cierre(self, resultado):
+        """Muestra resumen al cerrar caja"""
+        mensaje = (
+            f"✅ Caja Cerrada - Resumen:\n\n"
+            f"• Total del día: S/ {resultado['total']:.2f}\n"
+            f"• Efectivo: S/ {resultado['efectivo']:.2f}\n"
+            f"• Virtual: S/ {resultado['virtual']:.2f}\n"
+            f"• Productos vendidos: {resultado['productos']}\n\n"
+            f"Archivo guardado en:\n{resultado['archivo']}"
+        )
+        messagebox.showinfo("Caja Cerrada", mensaje)
     
     def crear_menu(self):
         """Crea el menú superior"""
@@ -100,7 +86,7 @@ class VentanaPrincipal:
         menubar.add_cascade(label="Archivo", menu=menu_archivo)
         menu_archivo.add_command(label="Recargar Productos", command=self.recargar_productos)
         menu_archivo.add_separator()
-        menu_archivo.add_command(label="Salir", command=self.root.quit)
+        menu_archivo.add_command(label="Salir", command=self.al_cerrar)
         
         # Menú Productos
         menu_productos = tk.Menu(menubar, tearoff=0)
@@ -109,19 +95,16 @@ class VentanaPrincipal:
         menu_productos.add_command(label="Editar Producto", command=self.ventana_editar_producto)
         menu_productos.add_command(label="Eliminar Producto", command=self.ventana_eliminar_producto)
         
-        # Menú Reportes
+        # Menú Reportes (SIMPLIFICADO)
         menu_reportes = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Reportes", menu=menu_reportes)
-        menu_reportes.add_command(label="Guardar ventas", command=self.guardar_ventas)  
-        menu_reportes.add_command(label="📊 Reporte del Día", command=self.abrir_reporte_dia)  
-        menu_reportes.add_separator() 
-        menu_reportes.add_command(label="Inventario Vendido", command=self.abrir_inventario_vendido)
-        menu_reportes.add_command(label="Top Productos", command=self.abrir_top_productos)
-        menu_reportes.add_command(label="Análisis de Pagos", command=self.abrir_analisis_pagos)
-        menu_reportes.add_command(label="Gráficos", command=self.abrir_graficos)
+        menu_reportes.add_command(label="📦 Cerrar Caja del Día", command=self.cerrar_caja)
+        menu_reportes.add_command(label="📊 Consultar Ventas Diarias", command=self.abrir_reporte_dia)
         menu_reportes.add_separator()
-        menu_reportes.add_command(label="Exportar Reporte Completo", command=self.abrir_exportar_reporte)
-            
+        menu_reportes.add_command(label="📋 Inventario Vendido", command=self.abrir_inventario_vendido)
+        menu_reportes.add_separator()
+        menu_reportes.add_command(label="🗑️ Limpiar Caja (Emergencia)", command=self.limpiar_caja_emergencia)
+        
         # Menú Configuración
         menu_config = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Configuración", menu=menu_config)
@@ -319,23 +302,6 @@ class VentanaPrincipal:
                                            font=FUENTES['normal'], bg='#e8f5e9')
         self.label_total_virtual.pack(anchor='w')
     
-    def actualizar_combobox(self):
-        """Actualiza el combobox con la lista de productos"""
-        nombres = self.gestor_productos.obtener_nombres_productos()
-        self.combo_productos['values'] = nombres
-    
-    def seleccionar_producto(self, event):
-        """Maneja la selección de un producto del combobox"""
-        seleccion = self.combo_productos.get()
-        if seleccion:
-            # Extraer el nombre del producto (antes del " - S/")
-            nombre = seleccion.split(' - S/')[0]
-            # Buscar el producto
-            for producto in self.gestor_productos.productos:
-                if producto['nombre'] == nombre:
-                    self.producto_seleccionado = producto
-                    break
-    
     def agregar_producto(self):
         """Agrega un producto a la lista de ventas"""
         if not self.producto_seleccionado:
@@ -363,9 +329,6 @@ class VentanaPrincipal:
                 return
             elif "ADVERTENCIA" in mensaje_stock:
                 messagebox.showwarning("Advertencia", mensaje_stock)
-        
-        # ✅ GUARDADO AUTOMÁTICO
-        self.gestor_ventas.guardar_temporal()
         
         # Actualizar interfaz
         self.agregar_item_lista(venta, len(self.gestor_ventas.ventas_actuales) - 1)
@@ -412,8 +375,6 @@ class VentanaPrincipal:
     
     def eliminar_item(self, indice):
         """Elimina un item de la lista"""
-        # Si el stock está activado, devolver las unidades
-        import config
         if config.STOCK_ACTIVADO and indice < len(self.gestor_ventas.ventas_actuales):
             venta = self.gestor_ventas.ventas_actuales[indice]
             for producto in self.gestor_productos.productos:
@@ -423,23 +384,17 @@ class VentanaPrincipal:
                     break
         
         if self.gestor_ventas.eliminar_venta(indice):
-            # ✅ GUARDADO AUTOMÁTICO
-            self.gestor_ventas.guardar_temporal()
-            
             self.actualizar_lista()
             self.actualizar_totales()
             self.actualizar_productos_dict()
     
     def actualizar_lista(self):
         """Actualiza la lista visual de ventas"""
-        # Limpiar frame
         for widget in self.frame_productos.winfo_children():
             widget.destroy()
         
-        # Recrear encabezado
         self.crear_encabezado_lista()
         
-        # Agregar items
         for i, venta in enumerate(self.gestor_ventas.obtener_ventas()):
             self.agregar_item_lista(venta, i)
     
@@ -450,29 +405,259 @@ class VentanaPrincipal:
         self.label_total_efectivo.config(text=f"S/ {totales['efectivo']:.2f}")
         self.label_total_virtual.config(text=f"S/ {totales['virtual']:.2f}")
     
-    def guardar_ventas(self):
-        """Guarda las ventas actuales DEFINITIVAMENTE"""
+    def cerrar_caja(self):
+        """Cierra la caja del día (guarda ventas y limpia lista)"""
         if not self.gestor_ventas.ventas_actuales:
             messagebox.showwarning("Advertencia", "No hay ventas para guardar")
             return
         
-        exito, mensaje = self.gestor_ventas.guardar_ventas()
+        # Confirmación
+        respuesta = messagebox.askyesno(
+            "Cerrar Caja del Día",
+            "¿Desea cerrar la caja del día?\n\n"
+            "Esto guardará todas las ventas actuales\n"
+            "y limpiará la lista para comenzar una nueva caja.",
+            icon='question'
+        )
+        
+        if not respuesta:
+            return
+        
+        exito, resultado = self.gestor_ventas.guardar_ventas()
         if exito:
-            messagebox.showinfo("Éxito", mensaje)
-            # ✅ NUEVO: Las ventas ya se limpiaron automáticamente en guardar_ventas()
+            self.mostrar_resumen_cierre(resultado)
             self.actualizar_lista()
             self.actualizar_totales()
         else:
-            messagebox.showerror("Error", mensaje)
+            messagebox.showerror("Error", resultado)
     
+    def limpiar_caja_emergencia(self):
+        """Limpia la caja actual sin guardar (EMERGENCIA)"""
+        if not self.gestor_ventas.ventas_actuales:
+            messagebox.showinfo("Información", "No hay ventas en la caja actual")
+            return
+        
+        # Doble confirmación
+        respuesta1 = messagebox.askyesno(
+            "⚠️ Limpiar Caja (Emergencia)",
+            "ADVERTENCIA: Esta acción eliminará todas las ventas\n"
+            "actuales SIN GUARDAR.\n\n"
+            "¿Está seguro de continuar?",
+            icon='warning'
+        )
+        
+        if not respuesta1:
+            return
+        
+        respuesta2 = messagebox.askyesno(
+            "⚠️ Confirmación Final",
+            "Esta es su última oportunidad.\n\n"
+            "Las ventas actuales se perderán PERMANENTEMENTE.\n\n"
+            "¿Confirma la limpieza de caja?",
+            icon='error'
+        )
+        
+        if respuesta2:
+            # Devolver stock si está activado
+            if config.STOCK_ACTIVADO:
+                for venta in self.gestor_ventas.ventas_actuales:
+                    for producto in self.gestor_productos.productos:
+                        if producto['codigo'] == venta['codigo']:
+                            producto['stock'] += venta['cantidad']
+                self.gestor_productos.guardar_productos()
+            
+            self.gestor_ventas.limpiar_ventas()
+            self.actualizar_lista()
+            self.actualizar_totales()
+            self.actualizar_productos_dict()
+            messagebox.showinfo("Caja Limpiada", "La caja ha sido limpiada exitosamente")
     
     def recargar_productos(self):
         """Recarga los productos del CSV"""
         if self.gestor_productos.cargar_productos():
-            self.actualizar_combobox()
+            self.actualizar_productos_dict()
             messagebox.showinfo("Éxito", "Productos recargados correctamente")
         else:
             messagebox.showerror("Error", "No se pudieron recargar los productos")
+    
+    def agregar_producto_variable(self):
+        """Abre ventana para agregar producto de precio variable Y guardarlo en productos.csv"""
+        ventana = tk.Toplevel(self.root)
+        ventana.title("Agregar Producto Variable")
+        ventana.geometry("420x500")
+        ventana.configure(bg=COLORES['fondo'])
+        ventana.resizable(False, False)
+        
+        ventana.transient(self.root)
+        ventana.grab_set()
+        
+        # Frame principal con scroll
+        main_frame = tk.Frame(ventana, bg=COLORES['fondo'])
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        canvas = tk.Canvas(main_frame, bg=COLORES['fondo'], highlightthickness=0)
+        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=COLORES['fondo'])
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Título
+        tk.Label(scrollable_frame, text="Producto de Precio Variable", 
+                font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=15)
+        
+        tk.Label(scrollable_frame, 
+                text="El producto se agregará automáticamente\nal catálogo para uso futuro.",
+                font=FUENTES['pequeña'], bg=COLORES['fondo'], 
+                fg='gray', justify=tk.CENTER).pack(pady=5)
+        
+        # Frame para campos
+        frame_campos = tk.Frame(scrollable_frame, bg=COLORES['fondo'])
+        frame_campos.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
+        
+        # Nombre del producto
+        tk.Label(frame_campos, text="Nombre del Producto:", font=FUENTES['normal'],
+                bg=COLORES['fondo']).grid(row=0, column=0, padx=10, pady=10, sticky='e')
+        entry_nombre = tk.Entry(frame_campos, font=FUENTES['normal'], width=25)
+        entry_nombre.insert(0, "otros")
+        entry_nombre.select_range(0, tk.END)
+        entry_nombre.grid(row=0, column=1, padx=10, pady=10)
+        entry_nombre.focus()
+        
+        # Precio Base
+        tk.Label(frame_campos, text="Precio Base Unitario:", font=FUENTES['normal'],
+                bg=COLORES['fondo']).grid(row=1, column=0, padx=10, pady=10, sticky='e')
+        entry_precio = tk.Entry(frame_campos, font=FUENTES['normal'], width=25)
+        entry_precio.grid(row=1, column=1, padx=10, pady=10)
+        
+        # Cantidad
+        tk.Label(frame_campos, text="Cantidad:", font=FUENTES['normal'],
+                bg=COLORES['fondo']).grid(row=2, column=0, padx=10, pady=10, sticky='e')
+        spin_cantidad_var = tk.Spinbox(frame_campos, from_=1, to=1000, width=23,
+                                    font=FUENTES['normal'])
+        spin_cantidad_var.grid(row=2, column=1, padx=10, pady=10)
+        
+        # Categoría (opcional)
+        tk.Label(frame_campos, text="Categoría:", font=FUENTES['normal'],
+                bg=COLORES['fondo']).grid(row=3, column=0, padx=10, pady=10, sticky='e')
+        combo_categoria = ttk.Combobox(frame_campos, font=FUENTES['normal'], width=23)
+        combo_categoria['values'] = ['Varios'] + self.gestor_productos.obtener_categorias()
+        combo_categoria.set('Varios')
+        combo_categoria.grid(row=3, column=1, padx=10, pady=10)
+        
+        # Método de pago
+        tk.Label(frame_campos, text="Método de Pago:", font=FUENTES['normal'],
+                bg=COLORES['fondo']).grid(row=4, column=0, padx=10, pady=10, sticky='e')
+        
+        frame_metodos_var = tk.Frame(frame_campos, bg=COLORES['fondo'])
+        frame_metodos_var.grid(row=4, column=1, padx=10, pady=10, sticky='w')
+        
+        metodo_pago_var = tk.StringVar(value='E')
+        for codigo, nombre in METODOS_PAGO.items():
+            rb = tk.Radiobutton(frame_metodos_var, text=f"{codigo} ({nombre})", 
+                            variable=metodo_pago_var, value=codigo,
+                            font=FUENTES['pequeña'], bg=COLORES['fondo'])
+            rb.pack(anchor='w')
+        
+        # Función para agregar
+        def agregar_variable():
+            nombre = entry_nombre.get().strip()
+            precio_str = entry_precio.get().strip()
+            cantidad_str = spin_cantidad_var.get()
+            categoria = combo_categoria.get().strip()
+            metodo = metodo_pago_var.get()
+            
+            if not nombre:
+                messagebox.showerror("Error", "Ingrese el nombre del producto")
+                entry_nombre.focus()
+                return
+            
+            if not validar_numero(precio_str, 'float'):
+                messagebox.showerror("Error", "El precio debe ser un número válido")
+                entry_precio.focus()
+                return
+            
+            if not validar_numero(cantidad_str, 'int'):
+                messagebox.showerror("Error", "La cantidad debe ser un número válido")
+                spin_cantidad_var.focus()
+                return
+            
+            cantidad = int(cantidad_str)
+            precio = float(precio_str)
+            
+            # Generar código automático
+            codigo = self.gestor_productos.obtener_siguiente_codigo_variable()
+            
+            # Guardar producto en productos.csv
+            exito, mensaje = self.gestor_productos.agregar_producto(
+                codigo, nombre, precio, categoria, stock=0
+            )
+            
+            if not exito:
+                messagebox.showerror("Error", f"No se pudo agregar el producto:\n{mensaje}")
+                return
+            
+            # Recargar productos
+            self.gestor_productos.cargar_productos()
+            self.actualizar_productos_dict()
+            
+            # Buscar el producto recién agregado
+            producto_nuevo = None
+            for p in self.gestor_productos.productos:
+                if p['codigo'] == codigo:
+                    producto_nuevo = p
+                    break
+            
+            if not producto_nuevo:
+                messagebox.showerror("Error", "Producto agregado pero no encontrado")
+                return
+            
+            # Agregar a la venta actual
+            venta = self.gestor_ventas.agregar_venta(producto_nuevo, cantidad, metodo)
+            self.agregar_item_lista(venta, len(self.gestor_ventas.ventas_actuales) - 1)
+            self.actualizar_totales()
+            
+            ventana.destroy()
+            messagebox.showinfo("Éxito", 
+                              f"✅ Producto '{nombre}' agregado al catálogo\n"
+                              f"Código: {codigo}\n"
+                              f"Precio base: S/ {precio:.2f}\n\n"
+                              f"También se agregó a la venta actual.")
+        
+        # Botón Agregar
+        btn_agregar_var = tk.Button(scrollable_frame, text="Agregar a Venta y Catálogo", 
+                                    command=agregar_variable,
+                                    bg=COLORES['secundario'], fg='white', 
+                                    font=FUENTES['normal'], cursor='hand2',
+                                    padx=30, pady=10)
+        btn_agregar_var.pack(pady=15)
+        
+        # Botón Cancelar
+        btn_cancelar = tk.Button(scrollable_frame, text="Cancelar", 
+                                command=ventana.destroy,
+                                bg=COLORES['borde'], fg='white', 
+                                font=FUENTES['pequeña'], cursor='hand2',
+                                padx=20, pady=5)
+        btn_cancelar.pack(pady=5)
+        
+        # Pack canvas y scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Permitir Enter
+        entry_precio.bind('<Return>', lambda e: agregar_variable())
+        
+        # Habilitar scroll con rueda del mouse
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    
+    # === MÉTODOS DE GESTIÓN DE PRODUCTOS ===
     
     def ventana_agregar_producto(self):
         """Abre ventana para agregar un nuevo producto"""
@@ -510,7 +695,6 @@ class VentanaPrincipal:
         entry_stock.insert(0, '0')
         entry_stock.grid(row=4, column=1, padx=10, pady=10)
         
-        import config
         if not config.STOCK_ACTIVADO:
             entry_stock.config(state='disabled')
             tk.Label(ventana, text="(Stock desactivado)", font=FUENTES['pequeña'],
@@ -538,7 +722,7 @@ class VentanaPrincipal:
             exito, mensaje = self.gestor_productos.agregar_producto(codigo, nombre, precio, categoria, stock)
             if exito:
                 messagebox.showinfo("Éxito", mensaje)
-                self.actualizar_combobox()
+                self.actualizar_productos_dict()
                 ventana.destroy()
             else:
                 messagebox.showerror("Error", mensaje)
@@ -550,7 +734,6 @@ class VentanaPrincipal:
     
     def ventana_editar_producto(self):
         """Abre ventana para editar un producto existente"""
-        # Primero seleccionar el producto
         ventana_seleccion = tk.Toplevel(self.root)
         ventana_seleccion.title("Seleccionar Producto")
         ventana_seleccion.geometry("450x400")
@@ -559,7 +742,6 @@ class VentanaPrincipal:
         tk.Label(ventana_seleccion, text="Seleccione el producto a editar:", 
                 font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=10)
         
-        # Listbox con productos
         frame_lista = tk.Frame(ventana_seleccion, bg='white')
         frame_lista.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
@@ -571,7 +753,6 @@ class VentanaPrincipal:
         listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=listbox.yview)
         
-        # Llenar listbox
         for producto in self.gestor_productos.productos:
             listbox.insert(tk.END, f"{producto['codigo']} - {producto['nombre']} - S/ {producto['precio']:.2f}")
         
@@ -584,18 +765,16 @@ class VentanaPrincipal:
             producto = self.gestor_productos.productos[seleccion[0]]
             ventana_seleccion.destroy()
             
-            # Ventana de edición
             ventana = tk.Toplevel(self.root)
             ventana.title("Editar Producto")
             ventana.geometry("400x300")
             ventana.configure(bg=COLORES['fondo'])
             
-            # Campos pre-llenados
             tk.Label(ventana, text="Código:", font=FUENTES['normal'], 
                     bg=COLORES['fondo']).grid(row=0, column=0, padx=10, pady=10, sticky='e')
             entry_codigo = tk.Entry(ventana, font=FUENTES['normal'], width=25)
             entry_codigo.insert(0, producto['codigo'])
-            entry_codigo.config(state='disabled')  # Código no editable
+            entry_codigo.config(state='disabled')
             entry_codigo.grid(row=0, column=1, padx=10, pady=10)
             
             tk.Label(ventana, text="Nombre:", font=FUENTES['normal'], 
@@ -617,7 +796,6 @@ class VentanaPrincipal:
             combo_categoria.set(producto['categoria'])
             combo_categoria.grid(row=3, column=1, padx=10, pady=10)
             
-            # Campo de stock
             tk.Label(ventana, text="Stock:", font=FUENTES['normal'], 
                     bg=COLORES['fondo']).grid(row=4, column=0, padx=10, pady=10, sticky='e')
             entry_stock = tk.Entry(ventana, font=FUENTES['normal'], width=25)
@@ -654,7 +832,7 @@ class VentanaPrincipal:
                     producto['codigo'], nombre, precio, categoria, stock)
                 if exito:
                     messagebox.showinfo("Éxito", mensaje)
-                    self.actualizar_combobox()
+                    self.actualizar_productos_dict()
                     ventana.destroy()
                 else:
                     messagebox.showerror("Error", mensaje)
@@ -680,7 +858,6 @@ class VentanaPrincipal:
         tk.Label(ventana, text="Seleccione el producto a eliminar:", 
                 font=FUENTES['titulo'], bg=COLORES['fondo'], fg=COLORES['error']).pack(pady=10)
         
-        # Listbox con productos
         frame_lista = tk.Frame(ventana, bg='white')
         frame_lista.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
@@ -692,7 +869,6 @@ class VentanaPrincipal:
         listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=listbox.yview)
         
-        # Llenar listbox
         for producto in self.gestor_productos.productos:
             listbox.insert(tk.END, f"{producto['codigo']} - {producto['nombre']} - S/ {producto['precio']:.2f}")
         
@@ -704,7 +880,6 @@ class VentanaPrincipal:
             
             producto = self.gestor_productos.productos[seleccion[0]]
             
-            # Confirmación
             respuesta = messagebox.askyesno("Confirmar Eliminación", 
                                            f"¿Está seguro de eliminar el producto?\n\n"
                                            f"Código: {producto['codigo']}\n"
@@ -714,7 +889,7 @@ class VentanaPrincipal:
             if respuesta:
                 if self.gestor_productos.eliminar_producto(producto['codigo']):
                     messagebox.showinfo("Éxito", "Producto eliminado correctamente")
-                    self.actualizar_combobox()
+                    self.actualizar_productos_dict()
                     ventana.destroy()
                 else:
                     messagebox.showerror("Error", "No se pudo eliminar el producto")
@@ -725,263 +900,6 @@ class VentanaPrincipal:
                                 cursor='hand2', padx=20)
         btn_eliminar.pack(pady=10)
     
-    def ver_historial(self):
-        """Muestra el historial de ventas en una ventana"""
-        ventana = tk.Toplevel(self.root)
-        ventana.title("Historial de Ventas")
-        ventana.geometry("900x600")
-        ventana.configure(bg=COLORES['fondo'])
-        
-        # Frame superior con filtros
-        frame_filtros = tk.Frame(ventana, bg=COLORES['fondo'])
-        frame_filtros.pack(fill=tk.X, padx=10, pady=10)
-        
-        tk.Label(frame_filtros, text="Filtrar por fecha:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).pack(side=tk.LEFT, padx=5)
-        
-        from datetime import datetime
-        fecha_hoy = datetime.now().strftime('%Y-%m-%d')
-        
-        entry_fecha = tk.Entry(frame_filtros, font=FUENTES['normal'], width=15)
-        entry_fecha.insert(0, fecha_hoy)
-        entry_fecha.pack(side=tk.LEFT, padx=5)
-        
-        tk.Label(frame_filtros, text="(YYYY-MM-DD)", font=FUENTES['pequeña'],
-                bg=COLORES['fondo'], fg='gray').pack(side=tk.LEFT)
-        
-        # Frame para la tabla
-        frame_tabla = tk.Frame(ventana, bg='white')
-        frame_tabla.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Scrollbars
-        scroll_y = tk.Scrollbar(frame_tabla, orient=tk.VERTICAL)
-        scroll_x = tk.Scrollbar(frame_tabla, orient=tk.HORIZONTAL)
-        
-        # Treeview para mostrar datos
-        columnas = ('fecha', 'hora', 'producto', 'cantidad', 'precio', 'subtotal', 
-                   'pago', 'categoria')
-        tree = ttk.Treeview(frame_tabla, columns=columnas, show='headings',
-                           yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
-        
-        # Configurar columnas
-        tree.heading('fecha', text='Fecha')
-        tree.heading('hora', text='Hora')
-        tree.heading('producto', text='Producto')
-        tree.heading('cantidad', text='Cant.')
-        tree.heading('precio', text='P. Unit.')
-        tree.heading('subtotal', text='Subtotal')
-        tree.heading('pago', text='Pago')
-        tree.heading('categoria', text='Categoría')
-        
-        tree.column('fecha', width=100)
-        tree.column('hora', width=80)
-        tree.column('producto', width=200)
-        tree.column('cantidad', width=60)
-        tree.column('precio', width=80)
-        tree.column('subtotal', width=90)
-        tree.column('pago', width=60)
-        tree.column('categoria', width=100)
-        
-        scroll_y.config(command=tree.yview)
-        scroll_x.config(command=tree.xview)
-        
-        scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
-        scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
-        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        # Frame para totales
-        frame_totales_hist = tk.Frame(ventana, bg='#e3f2fd', relief=tk.RAISED, bd=2)
-        frame_totales_hist.pack(fill=tk.X, padx=10, pady=10)
-        
-        label_total_hist = tk.Label(frame_totales_hist, text="Total: S/ 0.00", 
-                                    font=FUENTES['total'], bg='#e3f2fd')
-        label_total_hist.pack(pady=10)
-        
-        def cargar_historial():
-            # Limpiar tabla
-            for item in tree.get_children():
-                tree.delete(item)
-            
-            fecha = entry_fecha.get().strip()
-            historial = self.gestor_ventas.obtener_historial(fecha if fecha else None)
-            
-            if not historial:
-                messagebox.showinfo("Información", "No hay ventas registradas para esta fecha")
-                return
-            
-            total = 0
-            for venta in historial:
-                subtotal = float(venta.get('subtotal', 0))
-                total += subtotal
-                tree.insert('', tk.END, values=(
-                    venta.get('fecha', ''),
-                    venta.get('hora', ''),
-                    venta.get('nombre', ''),
-                    venta.get('cantidad', ''),
-                    f"S/ {float(venta.get('precio_unitario', 0)):.2f}",
-                    f"S/ {subtotal:.2f}",
-                    venta.get('metodo_pago', ''),
-                    venta.get('categoria', '')
-                ))
-            
-            label_total_hist.config(text=f"Total: S/ {total:.2f}")
-        
-        btn_buscar = tk.Button(frame_filtros, text="Buscar", command=cargar_historial,
-                              bg=COLORES['primario'], fg='white', font=FUENTES['normal'],
-                              cursor='hand2', padx=15)
-        btn_buscar.pack(side=tk.LEFT, padx=10)
-        
-        btn_todo = tk.Button(frame_filtros, text="Ver Todo", 
-                            command=lambda: [entry_fecha.delete(0, tk.END), cargar_historial()],
-                            bg=COLORES['secundario'], fg='white', font=FUENTES['normal'],
-                            cursor='hand2', padx=15)
-        btn_todo.pack(side=tk.LEFT, padx=5)
-        
-        # Cargar historial inicial
-        cargar_historial()
-    def agregar_producto_variable(self):
-        """Abre ventana para agregar producto de precio variable"""
-        ventana = tk.Toplevel(self.root)
-        ventana.title("Agregar Producto Variable")
-        ventana.geometry("420x400")
-        ventana.configure(bg=COLORES['fondo'])
-        ventana.resizable(False, False)
-        
-        # Centrar ventana
-        ventana.transient(self.root)
-        ventana.grab_set()
-        
-        # Frame principal con scroll
-        main_frame = tk.Frame(ventana, bg=COLORES['fondo'])
-        main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Canvas y Scrollbar
-        canvas = tk.Canvas(main_frame, bg=COLORES['fondo'], highlightthickness=0)
-        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg=COLORES['fondo'])
-        
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # Título
-        tk.Label(scrollable_frame, text="Producto de Precio Variable", 
-                font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=15)
-        
-        # Frame para campos
-        frame_campos = tk.Frame(scrollable_frame, bg=COLORES['fondo'])
-        frame_campos.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
-        
-        # Descripción
-        tk.Label(frame_campos, text="Descripción:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=0, column=0, padx=10, pady=10, sticky='e')
-        entry_descripcion = tk.Entry(frame_campos, font=FUENTES['normal'], width=25)
-        
-        # ✅ NUEVO: Pre-llenar con "otros"
-        entry_descripcion.insert(0, "otros")
-        entry_descripcion.select_range(0, tk.END)  # Seleccionar todo el texto
-        
-        entry_descripcion.grid(row=0, column=1, padx=10, pady=10)
-        entry_descripcion.focus()  
-          
-        # Cantidad
-        tk.Label(frame_campos, text="Cantidad:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=1, column=0, padx=10, pady=10, sticky='e')
-        spin_cantidad_var = tk.Spinbox(frame_campos, from_=1, to=1000, width=23,
-                                    font=FUENTES['normal'])
-        spin_cantidad_var.grid(row=1, column=1, padx=10, pady=10)
-        
-        # Precio Unitario
-        tk.Label(frame_campos, text="Precio Unitario:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=2, column=0, padx=10, pady=10, sticky='e')
-        entry_precio = tk.Entry(frame_campos, font=FUENTES['normal'], width=25)
-        entry_precio.grid(row=2, column=1, padx=10, pady=10)
-        
-        # Método de pago
-        tk.Label(frame_campos, text="Método de Pago:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=3, column=0, padx=10, pady=10, sticky='e')
-        
-        frame_metodos_var = tk.Frame(frame_campos, bg=COLORES['fondo'])
-        frame_metodos_var.grid(row=3, column=1, padx=10, pady=10, sticky='w')
-        
-        metodo_pago_var = tk.StringVar(value='E')
-        for codigo, nombre in METODOS_PAGO.items():
-            rb = tk.Radiobutton(frame_metodos_var, text=f"{codigo} ({nombre})", 
-                            variable=metodo_pago_var, value=codigo,
-                            font=FUENTES['pequeña'], bg=COLORES['fondo'])
-            rb.pack(anchor='w')
-        
-        # Función para agregar
-        def agregar_variable():
-            descripcion = entry_descripcion.get().strip()
-            cantidad_str = spin_cantidad_var.get()
-            precio_str = entry_precio.get().strip()
-            metodo = metodo_pago_var.get()
-            
-            if not descripcion:
-                messagebox.showerror("Error", "Ingrese una descripción")
-                entry_descripcion.focus()
-                return
-            
-            if not validar_numero(cantidad_str, 'int'):
-                messagebox.showerror("Error", "La cantidad debe ser un número válido")
-                spin_cantidad_var.focus()
-                return
-            
-            if not validar_numero(precio_str, 'float'):
-                messagebox.showerror("Error", "El precio debe ser un número válido")
-                entry_precio.focus()
-                return
-            
-            cantidad = int(cantidad_str)
-            precio = float(precio_str)
-            
-            producto_temporal = {
-                'codigo': 'VAR',
-                'nombre': descripcion,
-                'precio': precio,
-                'categoria': 'Varios'
-            }
-            
-            venta = self.gestor_ventas.agregar_venta(producto_temporal, cantidad, metodo)
-            self.agregar_item_lista(venta, len(self.gestor_ventas.ventas_actuales) - 1)
-            self.actualizar_totales()
-            
-            ventana.destroy()
-            messagebox.showinfo("Éxito", f"'{descripcion}' agregado a la venta")
-        
-        # Botón Agregar
-        btn_agregar_var = tk.Button(scrollable_frame, text="Agregar a Venta", 
-                                    command=agregar_variable,
-                                    bg=COLORES['secundario'], fg='white', 
-                                    font=FUENTES['normal'], cursor='hand2',
-                                    padx=30, pady=10)
-        btn_agregar_var.pack(pady=15)
-        
-        # Botón Cancelar
-        btn_cancelar = tk.Button(scrollable_frame, text="Cancelar", 
-                                command=ventana.destroy,
-                                bg=COLORES['borde'], fg='white', 
-                                font=FUENTES['pequeña'], cursor='hand2',
-                                padx=20, pady=5)
-        btn_cancelar.pack(pady=5)
-        
-        # Pack canvas y scrollbar
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Permitir Enter
-        entry_precio.bind('<Return>', lambda e: agregar_variable())
-        
-        # Habilitar scroll con rueda del mouse
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
-    
     # === MÉTODOS DE REPORTES ===
     
     def abrir_inventario_vendido(self):
@@ -989,21 +907,9 @@ class VentanaPrincipal:
         ventana = VentanaInventarioVendido(self.root)
         ventana.set_gestor_productos(self.gestor_productos)
     
-    def abrir_top_productos(self):
-        """Abre ventana de top productos"""
-        VentanaTopProductos(self.root)
-    
-    def abrir_analisis_pagos(self):
-        """Abre ventana de análisis de pagos"""
-        VentanaAnalisisPagos(self.root)
-    
-    def abrir_graficos(self):
-        """Abre ventana de gráficos"""
-        VentanaGraficos(self.root)
-    
-    def abrir_exportar_reporte(self):
-        """Abre ventana para exportar reporte"""
-        VentanaExportarReporte(self.root)
+    def abrir_reporte_dia(self):
+        """Abre ventana de reporte del día"""
+        VentanaReporteDia(self.root)
     
     def configurar_stock(self):
         """Abre ventana de configuración de stock"""
@@ -1015,12 +921,11 @@ class VentanaPrincipal:
         tk.Label(ventana, text="Gestión de Inventario (Stock)", 
                 font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=20)
         
-        # Estado actual
         estado_actual = "ACTIVADO" if config.STOCK_ACTIVADO else "DESACTIVADO"
         tk.Label(ventana, text=f"Estado actual: {estado_actual}",
                 font=FUENTES['normal'], bg=COLORES['fondo'], 
-                fg=COLORES['secundario'] if config.STOCK_ACTIVADO else COLORES['error']).pack(pady=10)      
-        # Explicación
+                fg=COLORES['secundario'] if config.STOCK_ACTIVADO else COLORES['error']).pack(pady=10)
+        
         texto_info = (
             "Cuando el control de stock está ACTIVADO:\n\n"
             "• Cada producto tendrá una columna de stock en el CSV\n"
@@ -1036,44 +941,31 @@ class VentanaPrincipal:
         tk.Label(ventana, text=texto_info, font=FUENTES['pequeña'],
                 bg=COLORES['fondo'], justify=tk.LEFT).pack(pady=20, padx=20)
         
-        # Botones
         frame_botones = tk.Frame(ventana, bg=COLORES['fondo'])
         frame_botones.pack(pady=20)
         
         def activar_stock():
-            import config
             config.guardar_config_stock(True)
-            
-            # Actualizar la variable global EN EL MÓDULO config
             config.STOCK_ACTIVADO = True
-            
-            # Recargar productos automáticamente
             self.gestor_productos.cargar_productos()
-            self.actualizar_combobox()
-            
+            self.actualizar_productos_dict()
             messagebox.showinfo("Éxito", "Control de stock ACTIVADO\n\n"
-                                        "Los productos han sido recargados.\n"
-                                        "Los productos tendrán stock inicial en 0 si no lo tenían.")
+                                        "Los productos han sido recargados.")
             ventana.destroy()
+        
         def desactivar_stock():
-            from config import guardar_config_stock
             respuesta = messagebox.askyesno("Confirmar", 
                                         "¿Desea DESACTIVAR el control de stock?\n\n"
                                         "Los valores de stock se mantendrán en el CSV\n"
                                         "pero no se controlarán las ventas.")
             if respuesta:
-                guardar_config_stock(False)
-                
-                # Actualizar la variable global EN EL MÓDULO config
-                import config
+                config.guardar_config_stock(False)
                 config.STOCK_ACTIVADO = False
-                
-                # Recargar productos automáticamente
                 self.gestor_productos.cargar_productos()
-                self.actualizar_combobox()
-                
+                self.actualizar_productos_dict()
                 messagebox.showinfo("Éxito", "Control de stock DESACTIVADO")
                 ventana.destroy()
+        
         def ver_stock_bajo():
             productos_bajo = self.gestor_productos.productos_stock_bajo(10)
             if not productos_bajo:
@@ -1099,8 +991,3 @@ class VentanaPrincipal:
                      command=ver_stock_bajo,
                      bg=COLORES['advertencia'], fg='white', font=FUENTES['normal'],
                      cursor='hand2', padx=20, pady=10).pack(pady=10)
-            
-    def abrir_reporte_dia(self):
-        """Abre ventana de reporte del día"""
-        from ventana_reportes import VentanaReporteDia
-        VentanaReporteDia(self.root)

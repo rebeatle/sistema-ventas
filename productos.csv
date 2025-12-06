@@ -9,3 +9,5 @@ codigo,nombre,precio,categoria,stock
 008,Pan Integral,6.0,Panadería,1
 da,222,121.0,Panadería,0
 5,GUARANA,1.5,Bebidas,0
+1,3123,2.0,Dulces,0
+VAR001,dat,1.0,Varios,0

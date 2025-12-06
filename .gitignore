@@ -32,3 +32,12 @@ ventas/ventas_2025-11-29.csv
 productos.csv
 SistemaBazar.spec
 productos.csv
+__pycache__/config.cpython-313.pyc
+__pycache__/interfaz.cpython-313.pyc
+__pycache__/logica.cpython-313.pyc
+__pycache__/reportes.cpython-313.pyc
+__pycache__/ventana_reportes.cpython-313.pyc
+ventas/ventas_2025-12-05.csv
+productos.csv
+reporte_completo_20251205_170148.csv
+productos.csv

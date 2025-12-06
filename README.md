@@ -1,6 +1,6 @@
-# 🏪 Sistema de Gestión de Bazar
+# 🏪 Sistema de Gestión de Bazar - Versión Simplificada
 
-Sistema completo de punto de venta (POS) diseñado específicamente para bazares y tiendas de conveniencia en Perú. Desarrollado con Python y Tkinter, ofrece una interfaz intuitiva y funcionalidades completas para gestionar ventas, inventario y generar reportes detallados.
+Sistema completo de punto de venta (POS) diseñado específicamente para bazares y tiendas de conveniencia en Perú. Desarrollado con Python y Tkinter, ofrece una interfaz intuitiva y funcionalidades esenciales para gestionar ventas, inventario y consultar reportes.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Tkinter](https://img.shields.io/badge/GUI-Tkinter-green.svg)
@@ -12,15 +12,13 @@ Sistema completo de punto de venta (POS) diseñado específicamente para bazares
 ## 📋 Tabla de Contenidos
 
 - [Características](#-características)
-- [Capturas de Pantalla](#-capturas-de-pantalla)
 - [Requisitos](#-requisitos)
 - [Instalación](#-instalación)
-- [Uso](#-uso)
+- [Uso Rápido](#-uso-rápido)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
 - [Funcionalidades Detalladas](#-funcionalidades-detalladas)
-- [Configuración](#-configuración)
+- [Flujo de Trabajo Típico](#-flujo-de-trabajo-típico)
 - [Solución de Problemas](#-solución-de-problemas)
-- [Contribución](#-contribución)
 - [Licencia](#-licencia)
 
 ---
@@ -28,87 +26,34 @@ Sistema completo de punto de venta (POS) diseñado específicamente para bazares
 ## ✨ Características
 
 ### 🛒 **Gestión de Ventas**
-- ✅ Registro rápido de ventas con búsqueda inteligente de productos
+- ✅ Búsqueda inteligente con autocompletado
 - ✅ Múltiples métodos de pago (Efectivo, Yape, Plin, Otros)
-- ✅ Cálculo automático de totales por método de pago
-- ✅ Productos de precio variable (copias, impresiones, servicios)
-- ✅ Historial completo de ventas con fecha y hora
-- ✅ Interfaz intuitiva con scroll para muchos productos
+- ✅ Cálculo automático de totales (General, Efectivo, Virtual)
+- ✅ Productos de precio variable con guardado automático
+- ✅ Interfaz con scroll para muchos productos
 
 ### 📦 **Control de Inventario**
 - ✅ Gestión completa de productos (Agregar, Editar, Eliminar)
 - ✅ Control de stock opcional (activable/desactivable)
-- ✅ Stock siempre visible en lista de productos
+- ✅ Stock siempre visible en búsqueda
 - ✅ Alertas automáticas de stock bajo (≤ 5 unidades)
 - ✅ Categorización de productos
-- ✅ Actualización automática de stock al vender
 
-### 📊 **Reportes y Análisis**
-- ✅ **Reporte del Día**: Vista rápida de ventas diarias con:
-  - Productos agrupados por nombre
-  - Cantidad total vendida de cada producto
-  - Desglose por método de pago por producto
-  - Totales y porcentajes por método de pago
-  - Exportación a CSV para compartir
+### 📊 **Reportes Simplificados**
+- ✅ **Cerrar Caja del Día**: Guarda ventas con resumen completo
+- ✅ **Consultar Ventas Diarias**: Ver ventas de cualquier día específico
+  - Selector de fecha con botones rápidos (Hoy, Ayer, etc.)
+  - Productos agrupados con métodos de pago
+  - Exportación individual a CSV
 - ✅ **Inventario Vendido**: Filtrado por fecha, categoría o producto
-- ✅ **Top 10 Productos**: Por cantidad vendida y por ingresos
-- ✅ **Análisis de Métodos de Pago**: Distribución y porcentajes
-- ✅ **Gráficos Visuales**: 
-  - Ventas por categoría (gráficos de pastel)
-  - Tendencia de ventas diarias (línea)
-  - Top productos (barras horizontales)
-- ✅ **Exportación de Reportes Completos**: Formato CSV con rango de fechas personalizable
 
 ### 💼 **Características Adicionales**
 - ✅ Interfaz completamente en español
-- ✅ Diseño adaptado al mercado peruano
-- ✅ Soporte para soles peruanos (S/)
-- ✅ Sistema de archivos CSV para fácil edición
-- ✅ Sin necesidad de base de datos
-- ✅ Portable y ligero
-
----
-
-## 📸 Capturas de Pantalla
-
-### Pantalla Principal de Ventas
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Archivo  Productos  Reportes  Configuración                    │
-├─────────────────────────────────────────────────────────────────┤
-│ Producto: [Coca Cola 500ml - S/ 3.50 [STOCK: 50] ▼]           │
-│           Cant:[1] Pago:[E Y P O]  [Agregar]  [Otro]           │
-├─────────────────────────────────────────────────────────────────┤
-│ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ Producto               Cant  P.Unit  Subtotal  Pago  Acciones│ │
-│ │ Coca Cola 500ml         2    S/3.50  S/7.00    E    [Eliminar]│ │
-│ │ Galletas Oreo           1    S/4.50  S/4.50    Y    [Eliminar]│ │
-│ └─────────────────────────────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│ TOTAL GENERAL: S/ 11.50  |  Efectivo: S/ 7.00  |  Virtual: S/ 4.50│
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Reporte del Día
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    📊 REPORTE DEL DÍA                           │
-│                   Fecha: Sábado 29/11/2024                      │
-├─────────────────────────────────────────────────────────────────┤
-│ Producto          │ Cant Total │ P.Unit  │ Subtotal │ Métodos  │
-│ Coca Cola 500ml   │     5      │ S/ 3.50 │ S/ 17.50 │ E(3),Y(2)│
-│ Galletas Oreo     │     3      │ S/ 4.50 │ S/ 13.50 │ Yape (3) │
-├─────────────────────────────────────────────────────────────────┤
-│ 💰 RESUMEN DE PAGOS:                                            │
-│   Efectivo:  S/ 10.50  (33.9%)                                 │
-│   Yape:      S/ 20.50  (66.1%)                                 │
-│   Plin:      S/  0.00  ( 0.0%)                                 │
-│   Otros:     S/  0.00  ( 0.0%)                                 │
-│   ━━━━━━━━━━━━━━━━━━━━━━━━━                                    │
-│   TOTAL GENERAL: S/ 31.00                                      │
-│   (2 productos diferentes | 2 transacciones)                   │
-└─────────────────────────────────────────────────────────────────┘
-```
+- ✅ Diseño adaptado al mercado peruano (S/)
+- ✅ Alerta al cerrar con ventas pendientes
+- ✅ Botón de emergencia para limpiar caja
+- ✅ Sistema de archivos CSV fácil de editar
+- ✅ Compatible con .py y .exe
 
 ---
 
@@ -123,8 +68,9 @@ Sistema completo de punto de venta (POS) diseñado específicamente para bazares
 ### Dependencias de Python
 ```txt
 tkinter (incluido con Python)
-matplotlib>=3.5.0
 ```
+
+**Nota**: Ya no se requiere matplotlib. El sistema ha sido simplificado.
 
 ---
 
@@ -147,78 +93,79 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Instalar Dependencias
-```bash
-pip install matplotlib
-```
-
-### 4. Ejecutar el Sistema
+### 3. Ejecutar el Sistema
 ```bash
 python main.py
 ```
 
+**¡No hay dependencias adicionales que instalar!** 🎉
+
 ---
 
-## 🚀 Uso
+## 🚀 Uso Rápido
 
-### Inicio Rápido
-
-#### **Primera Ejecución**
+### **Primera Ejecución**
 El sistema creará automáticamente:
 - `productos.csv` con productos de ejemplo
-- Carpeta `ventas/` para almacenar historial
+- Carpeta `ventas_diarias/` para almacenar historial
 - `config_stock.txt` para configuración de inventario
 
-#### **Agregar Productos**
-1. Menú → **Productos** → **Agregar Producto**
-2. Completa los campos:
-   - **Código**: Identificador único (ej: 001, ABC123)
-   - **Nombre**: Nombre descriptivo del producto
-   - **Precio**: Precio en soles (ej: 3.50)
-   - **Categoría**: Bebidas, Snacks, Dulces, etc.
-   - **Stock Inicial**: Cantidad disponible (si stock está activado)
-3. Click en **Guardar**
+### **Flujo Básico**
 
-#### **Registrar Venta**
-1. Selecciona producto del desplegable (muestra nombre, precio y stock)
-2. Define cantidad con el control numérico
-3. Elige método de pago:
-   - **E**: Efectivo
-   - **Y**: Yape
-   - **P**: Plin
-   - **O**: Otros (tarjetas, transferencias)
+#### **1. Registrar Ventas**
+1. Busca producto escribiendo su nombre o código
+2. Selecciona de la lista desplegable
+3. Define cantidad y método de pago (E/Y/P/O)
 4. Click en **Agregar**
 5. Repite para más productos
-6. Al finalizar: Menú → **Reportes** → **Guardar ventas**
 
-#### **Producto de Precio Variable**
-Para productos sin precio fijo (copias, impresiones, servicios):
+#### **2. Producto No Listado (Botón "Otro")**
+Para productos sin precio fijo o no catalogados:
 1. Click en botón **Otro**
 2. Ingresa:
-   - **Descripción**: Ej. "Copias A4 color"
+   - **Nombre**: Ej. "Copias A4 color"
+   - **Precio Base**: Ej. 0.10 (se guardará para uso futuro)
    - **Cantidad**: Número de unidades
-   - **Precio Unitario**: Precio por unidad
+   - **Categoría**: Por defecto "Varios"
 3. Selecciona método de pago
-4. Click en **Agregar a Venta**
+4. Click en **Agregar a Venta y Catálogo**
+5. ✨ El producto se agrega a la venta Y se guarda automáticamente en `productos.csv` con código VAR001, VAR002, etc.
 
-#### **Ver Reporte del Día** ⭐ NUEVO
-Para revisar caja al final del día:
-1. Menú → **Reportes** → **📊 Reporte del Día**
-2. Verás:
-   - **Productos agrupados**: Cada producto aparece una sola vez con su cantidad total
-   - **Métodos de pago por producto**: "Efectivo (3), Yape (2)" muestra cómo se vendió
-   - **Totales por método**: Cuánto dinero hay en efectivo, Yape, Plin, etc.
-   - **Total general**: Suma de todos los métodos
-3. Click en **📄 Exportar CSV** para guardar o compartir
-4. Click en **🔄 Actualizar** para refrescar datos
+#### **3. Ver Resumen de Ventas Actuales**
+- Los totales se actualizan automáticamente en la parte inferior
+- **Total General**: Suma de todos los métodos
+- **Efectivo**: Solo ventas en efectivo
+- **Virtual**: Yape + Plin + Otros
 
-#### **Ver Reportes Avanzados**
-1. Menú → **Reportes** → Selecciona tipo:
-   - **Inventario Vendido**: Productos vendidos con filtros
-   - **Top Productos**: Los 10 más vendidos
-   - **Análisis de Pagos**: Distribución de métodos
-   - **Gráficos**: Visualizaciones con matplotlib
-   - **Exportar Reporte Completo**: CSV con análisis completo personalizable
+#### **4. Cerrar Caja del Día**
+Cuando termines el día:
+1. Menú → **Reportes** → **📦 Cerrar Caja del Día**
+2. Confirma la operación
+3. Verás resumen completo:
+   ```
+   ✅ Caja Cerrada - Resumen:
+   • Total del día: S/ 250.50
+   • Efectivo: S/ 150.00
+   • Virtual: S/ 100.50
+   • Productos vendidos: 15
+   
+   Archivo guardado en:
+   ventas_diarias/ventas_2024-12-06.csv
+   ```
+4. La lista de ventas se limpia automáticamente para el próximo día
+
+#### **5. Consultar Ventas de Días Pasados**
+1. Menú → **Reportes** → **📊 Consultar Ventas Diarias**
+2. Opciones:
+   - **Selector de fecha**: Ingresa YYYY-MM-DD
+   - **Botones rápidos**: Hoy, Ayer, Hace 7 días, Hace 30 días
+3. Click en **Buscar**
+4. Verás:
+   - Productos agrupados con cantidades totales
+   - Métodos de pago por producto (Ej: "Efectivo (3), Yape (2)")
+   - Totales por método con porcentajes
+   - Total general del día
+5. Click en **📄 Exportar CSV** para guardar reporte
 
 ---
 
@@ -227,77 +174,100 @@ Para revisar caja al final del día:
 ```
 sistema-bazar/
 │
-├── main.py                 # Punto de entrada principal
+├── main.py                 # Punto de entrada
 ├── interfaz.py            # Interfaz gráfica (GUI)
 ├── logica.py              # Lógica de negocio
 ├── config.py              # Configuración del sistema
-├── reportes.py            # Módulo de análisis y reportes
+├── reportes.py            # Análisis y reportes
 ├── ventana_reportes.py    # Interfaces de reportes
 │
 ├── productos.csv          # Base de datos de productos
 ├── config_stock.txt       # Configuración de stock (True/False)
 │
-├── ventas/               # Carpeta de historial
-│   ├── ventas_2024-11-29.csv
-│   ├── ventas_2024-11-30.csv
-│   └── ...
-│
-├── requirements.txt      # Dependencias del proyecto
-├── README.md            # Este archivo
-└── LICENSE              # Licencia MIT
+└── ventas_diarias/        # Carpeta de historial (NUEVA)
+    ├── ventas_2024-12-01.csv
+    ├── ventas_2024-12-02.csv
+    └── ventas_2024-12-06.csv
 ```
 
 ---
 
 ## 🎯 Funcionalidades Detalladas
 
-### 📦 Gestión de Productos
+### 📦 **Gestión de Productos**
 
-#### **Agregar Producto**
+#### **Agregar Producto Manualmente**
+Menú → Productos → Agregar Producto
 - Código único obligatorio
 - Validación de precios (solo números positivos)
 - Stock inicial configurable
 - Categorización para reportes
 
+#### **Agregar Producto con "Otro"**
+- Genera código automático: `VAR001`, `VAR002`, `VAR003`...
+- Se guarda permanentemente en `productos.csv`
+- Reutilizable en ventas futuras
+- Stock inicial: 0
+
 #### **Editar Producto**
 - Modificar cualquier campo excepto código
 - Actualización en tiempo real en interfaz
-- Preserva historial de ventas previas
 
 #### **Eliminar Producto**
-- Confirmación obligatoria antes de eliminar
+- Confirmación obligatoria
 - No afecta historial de ventas anteriores
-- Elimina de `productos.csv`
 
-### 💰 Métodos de Pago
+### 💰 **Métodos de Pago**
 
-| Código | Método | Descripción | Uso Común |
-|--------|--------|-------------|-----------|
-| **E** | Efectivo | Pago en efectivo | Billetes y monedas |
-| **Y** | Yape | Billetera virtual BCP | Transferencia móvil |
-| **P** | Plin | Billetera virtual múltiple | Transferencia móvil |
-| **O** | Otros | Tarjetas, transferencias, etc. | Cualquier otro método |
+| Código | Método | Descripción |
+|--------|--------|-------------|
+| **E** | Efectivo | Pago en efectivo |
+| **Y** | Yape | Billetera virtual BCP |
+| **P** | Plin | Billetera virtual múltiple |
+| **O** | Otros | Tarjetas, transferencias, etc. |
 
-### 📊 Sistema de Reportes
+### 📊 **Sistema de Reportes**
 
-#### **1. Reporte del Día** ⭐ DESTACADO
-**Propósito:** Revisión rápida de caja al final del día
+#### **1. Cerrar Caja del Día** ⭐ PRINCIPAL
+**Propósito:** Guardar ventas del día y comenzar nueva caja
 
 **Características:**
-- **Agrupación inteligente**: Si vendes el mismo producto varias veces, aparece una sola vez
+- Guarda en `ventas_diarias/ventas_YYYY-MM-DD.csv`
+- Muestra resumen con totales por método
+- Limpia lista automáticamente
+- No permite cerrar sin ventas
+
+**Cuándo usar:**
+- Al final del día laboral
+- Antes de cambio de turno
+- Para auditoría diaria
+
+#### **2. Consultar Ventas Diarias** ⭐ DESTACADO
+**Propósito:** Revisar ventas de cualquier día específico
+
+**Características:**
+- **Selector de fecha**: Ingresa fecha en formato YYYY-MM-DD
+- **Botones rápidos**:
+  - [Hoy]: Ventas del día actual
+  - [Ayer]: Ventas de ayer
+  - [Hace 7 días]: Ventas de hace 1 semana
+  - [Hace 30 días]: Ventas de hace 1 mes
+- **Vista agrupada**: Mismo producto aparece una vez con cantidad total
 - **Desglose de métodos**: Muestra cómo se vendió cada producto
   - Ejemplo: "Efectivo (3), Yape (2)" = 3 unidades en efectivo, 2 en Yape
-- **Totales por método**: Cuánto dinero físico vs virtual tienes
+- **Totales por método**: Cuánto dinero por cada método
 - **Porcentajes**: % de cada método sobre el total
-- **Exportación**: Guarda como CSV para compartir con gerencia
+- **Exportación**: Guarda como CSV individual
 
 **Casos de uso:**
-- Cerrar caja al final del día
-- Verificar que el dinero físico coincida con ventas en efectivo
-- Enviar resumen diario al dueño
-- Auditoría rápida de ventas
+- Verificar ventas de días pasados
+- Comparar ventas entre días
+- Generar reportes para gerencia
+- Auditoría de caja
 
-#### **2. Inventario Vendido**
+#### **3. Inventario Vendido**
+**Propósito:** Análisis de productos vendidos con filtros
+
 **Filtros disponibles:**
 - Rango de fechas personalizado
 - Por categoría específica
@@ -311,60 +281,81 @@ sistema-bazar/
 
 **Exportación:** CSV compatible con Excel
 
-#### **3. Top 10 Productos**
-**Dos vistas:**
-- **Por cantidad**: Los más vendidos en unidades
-- **Por ingresos**: Los que generaron más dinero
+---
 
-**Incluye:**
-- Gráficos de barras horizontales (opcional)
-- Código, nombre, categoría
-- Cantidad o ingreso según vista
+## 🔄 Flujo de Trabajo Típico
 
-#### **4. Análisis de Métodos de Pago**
-**Muestra:**
-- Total por método (Efectivo, Yape, Plin, Otros)
-- Porcentaje de cada método
-- Gráfico de barras comparativo
+### **Día a Día**
 
-**Útil para:**
-- Saber cuánto efectivo esperar en caja
-- Planificar cambio necesario
-- Entender preferencias de pago de clientes
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. ABRIR SISTEMA                                            │
+│    python main.py                                           │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 2. REGISTRAR VENTAS DEL DÍA                                 │
+│    • Buscar productos                                       │
+│    • Agregar a lista                                        │
+│    • Usar "Otro" para productos no listados                 │
+│    • Ver totales en tiempo real                             │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 3. CONSULTAR VENTAS ACTUALES (Opcional)                     │
+│    Reportes → Consultar Ventas Diarias → [Hoy]             │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 4. CERRAR CAJA AL FINAL DEL DÍA                             │
+│    Reportes → Cerrar Caja del Día                           │
+│    • Guarda en ventas_diarias/ventas_2024-12-06.csv        │
+│    • Muestra resumen                                        │
+│    • Limpia lista para mañana                               │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 5. REVISAR DÍAS PASADOS (Cuando sea necesario)             │
+│    Reportes → Consultar Ventas Diarias → [Seleccionar]     │
+└─────────────────────────────────────────────────────────────┘
+```
 
-#### **5. Gráficos Visuales**
-Requiere matplotlib instalado
+### **Gestión de Productos**
 
-**Tipos de gráficos:**
-- **Ventas por categoría**: Gráfico de pastel doble (cantidad e ingresos)
-- **Tendencia diaria**: Línea temporal de ventas
-- **Top productos**: Barras horizontales con colores
+```
+┌─────────────────────────────────────────────────────────────┐
+│ MÉTODO 1: Agregar Manualmente                               │
+│ Productos → Agregar Producto                                │
+│ • Código: 009                                               │
+│ • Nombre: Yogurt Gloria                                     │
+│ • Precio: 2.50                                              │
+│ • Categoría: Lácteos                                        │
+│ • Stock: 30                                                 │
+└─────────────────────────────────────────────────────────────┘
 
-#### **6. Reporte Completo Exportable**
-**Contenido:**
-- Resumen general (totales, promedios, fechas)
-- Top 10 productos por cantidad
-- Ventas por categoría
-- Análisis de métodos de pago
-
-**Formato:** CSV estructurado por secciones
-
-**Uso:** Informes mensuales, análisis de tendencias
+┌─────────────────────────────────────────────────────────────┐
+│ MÉTODO 2: Agregar con "Otro" (Durante venta)               │
+│ Botón "Otro" en pantalla principal                          │
+│ • Nombre: Copias A4                                         │
+│ • Precio Base: 0.10                                         │
+│ • Cantidad: 15                                              │
+│ → Se guarda automáticamente como VAR001                     │
+│ → Próxima vez aparece en búsqueda                           │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## ⚙️ Configuración
 
-### Control de Stock
-
-El sistema permite activar/desactivar el control de inventario:
+### **Control de Stock**
 
 #### **Activar Stock**
 1. Menú → **Configuración** → **Gestión de Stock** → **✅ Activar Stock**
 2. Efectos:
-   - Stock se muestra en lista de productos: `[STOCK: 50]`
+   - Stock se muestra en búsqueda: `Coca Cola - S/ 3.50 [STOCK: 50]`
    - Descuenta automáticamente al vender
-   - Alerta cuando stock ≤ 5 unidades: **"ADVERTENCIA: Stock bajo para X: N unidades"**
+   - Alerta cuando stock ≤ 5 unidades
    - No permite vender sin stock suficiente
    - Botón **"Ver Productos con Stock Bajo"** disponible
 
@@ -375,45 +366,20 @@ El sistema permite activar/desactivar el control de inventario:
    - Permite ventas ilimitadas
    - Stock en CSV se mantiene pero no se usa
 
-#### **Recargar Productos**
-Si editas `productos.csv` manualmente:
-1. Menú → **Archivo** → **Recargar Productos**
-2. Los cambios se reflejan inmediatamente
-
-### Formato de Archivos
+### **Formato de Archivos**
 
 #### **productos.csv**
 ```csv
 codigo,nombre,precio,categoria,stock
 001,Coca Cola 500ml,3.50,Bebidas,50
-002,Galletas Oreo,4.50,Snacks,30
-003,Copias A4,0.10,Servicios,0
+VAR001,Copias A4,0.10,Varios,0
 ```
 
-**Notas:**
-- Código debe ser único
-- Precio con punto decimal (3.50, no 3,50)
-- Stock: 0 si está desactivado o para productos variables
-
-#### **ventas/ventas_YYYY-MM-DD.csv**
+#### **ventas_diarias/ventas_2024-12-06.csv**
 ```csv
 fecha,hora,codigo,nombre,cantidad,precio_unitario,subtotal,metodo_pago,categoria
-2024-11-29,14:30:15,001,Coca Cola 500ml,2,3.50,7.00,E,Bebidas
-2024-11-29,14:31:20,VAR,Copias A4,10,0.10,1.00,E,Varios
-```
-
-**Notas:**
-- Un archivo por día
-- Código `VAR` para productos de precio variable
-- Hora en formato 24h
-
-#### **config_stock.txt**
-```
-True
-```
-o
-```
-False
+2024-12-06,14:30:15,001,Coca Cola 500ml,2,3.50,7.00,E,Bebidas
+2024-12-06,14:31:20,VAR001,Copias A4,10,0.10,1.00,E,Varios
 ```
 
 ---
@@ -433,36 +399,27 @@ False
 sudo apt-get install python3-tk
 ```
 
-### **Problema: Gráficos no se muestran**
-**Causa:** matplotlib no instalado
-
-**Solución:**
-```bash
-pip install matplotlib
-```
-
 ### **Problema: Stock no se actualiza al vender**
 **Verificar:**
 1. Menú → Configuración → Gestión de Stock
 2. Debe estar **Activado**
-3. Si aparece desactivado, hacer click en **✅ Activar Stock**
 
 ### **Problema: "No hay ventas para guardar"**
-**Causa:** Intentaste guardar sin agregar productos
+**Causa:** Intentaste cerrar caja sin agregar productos
 
 **Solución:**
 1. Agrega al menos un producto a la venta
-2. Luego: Menú → Reportes → Guardar ventas
+2. Luego: Menú → Reportes → Cerrar Caja del Día
 
-### **Problema: Reporte del Día está vacío**
-**Causa:** No hay ventas guardadas para hoy
+### **Problema: Consultar Ventas Diarias muestra "Sin ventas"**
+**Causa:** No hay ventas guardadas para esa fecha
 
 **Solución:**
-1. Registra y **guarda** al menos una venta
-2. Menú → Reportes → Guardar ventas
-3. Luego: Menú → Reportes → Reporte del Día
+1. Verifica que cerraste caja ese día
+2. Verifica la fecha en el selector (formato YYYY-MM-DD)
+3. Si es el día actual, primero cierra caja
 
-### **Problema: CSV con caracteres raros al abrir en Excel**
+### **Problema: CSV con caracteres raros en Excel**
 **Causa:** Codificación UTF-8
 
 **Solución:**
@@ -472,96 +429,65 @@ pip install matplotlib
 4. Cambiar **Origen del archivo** a **UTF-8**
 5. Click en **Cargar**
 
----
+### **Problema: Cerré sin querer con ventas pendientes**
+**Solución:**
+- ¡No hay problema! El sistema pregunta antes de cerrar:
+  - **SÍ**: Cerrar caja y salir (guarda ventas)
+  - **NO**: Salir sin guardar
+  - **CANCELAR**: No cerrar (vuelve al sistema)
 
-## 🤝 Contribución
+### **Problema: Agregué producto equivocado**
+**Solución:**
+1. Click en botón **Eliminar** al lado del producto
+2. Si el stock está activado, las unidades se devuelven automáticamente
 
-¡Las contribuciones son bienvenidas! Para contribuir:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature:
-   ```bash
-   git checkout -b feature/NuevaCaracteristica
-   ```
-3. Commit tus cambios:
-   ```bash
-   git commit -m 'Add: nueva característica increíble'
-   ```
-4. Push a la rama:
-   ```bash
-   git push origin feature/NuevaCaracteristica
-   ```
-5. Abre un Pull Request
-
-### Guías de Contribución
-- Mantén el código en español (comentarios y variables)
-- Sigue el estilo PEP 8
-- Documenta nuevas funciones con docstrings
-- Prueba antes de enviar PR
-- Actualiza README si agregas funcionalidades
+### **Problema: Necesito limpiar toda la caja de emergencia**
+**Solución:**
+1. Menú → Reportes → **🗑️ Limpiar Caja (Emergencia)**
+2. Confirma DOS veces (seguridad)
+3. Todas las ventas actuales se eliminan
+4. Stock se devuelve si está activado
 
 ---
 
 ## 📝 Changelog
 
-### **v1.2.0** - 2024-11-29
+### **v2.0.0** - 2024-12-06 (VERSIÓN LIMPIA)
+#### Eliminado
+- ❌ Sistema de autoguardado temporal
+- ❌ Recuperación de sesión automática
+- ❌ Top Productos (gráficos)
+- ❌ Análisis de Pagos (gráficos)
+- ❌ Gráficos Visuales (matplotlib)
+- ❌ Exportar Reporte Completo
+
 #### Agregado
-- ⭐ **Reporte del Día**: Vista rápida con productos agrupados
-- 📊 Desglose de métodos de pago por producto
-- 📄 Exportación de Reporte del Día a CSV
-- 📦 Stock siempre visible en lista de productos
+- ✅ Botón "Otro" guarda automáticamente en productos.csv
+- ✅ Códigos automáticos VAR001, VAR002, etc.
+- ✅ Cerrar Caja con resumen visual
+- ✅ Consultar Ventas Diarias con selector de fecha
+- ✅ Botones rápidos (Hoy, Ayer, etc.)
+- ✅ Limpiar Caja (Emergencia) con doble confirmación
+- ✅ Alerta mejorada al cerrar con ventas pendientes
 
 #### Mejorado
-- ✅ Ventana "Otro" ahora tiene scroll
-- ✅ Exportar Reporte Completo con selector de fechas funcional
-- 🔧 Código duplicado eliminado
+- ✅ Carpeta `ventas/` → `ventas_diarias/` (más descriptivo)
+- ✅ Menú Reportes simplificado y reorganizado
+- ✅ Documentación actualizada
+- ✅ Código más limpio y mantenible
 
-#### Corregido
-- 🐛 Productos duplicados en reportes (ahora agrupados correctamente)
-- 🐛 VentanaExportarReporte sin interfaz funcional
-
-### **v1.1.0** - 2024-11-15
-#### Agregado
-- Control de stock opcional
-- Alertas de stock bajo
-- Productos de precio variable
-- Gráficos con matplotlib
+### **v1.2.0** - 2024-11-29
+- Reporte del Día inicial
+- Stock visible en lista
 
 ### **v1.0.0** - 2024-11-01
-#### Lanzamiento inicial
-- Sistema de ventas básico
-- Gestión de productos
-- Reportes simples
+- Lanzamiento inicial
 
 ---
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
-
-```
-MIT License
-
-Copyright (c) 2024 rebe
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
 
 ---
 
@@ -575,41 +501,14 @@ SOFTWARE.
 
 ---
 
-## 🙏 Agradecimientos
-
-- [Tkinter](https://docs.python.org/3/library/tkinter.html) - Framework GUI
-- [Matplotlib](https://matplotlib.org/) - Gráficos y visualizaciones
-- Comunidad de desarrolladores Python en Perú
-- Todos los que han probado y dado feedback
-- Usuarios del sistema que sugirieron mejoras
-
----
-
 ## ⭐ ¿Te gustó el proyecto?
 
 Si este proyecto te fue útil, considera:
 - ⭐ Darle una estrella en GitHub
-- 🐛 Reportar bugs o sugerir mejoras en [Issues](https://github.com/rebeatle/sistema-ventas/issues)
+- 🐛 Reportar bugs en [Issues](https://github.com/rebeatle/sistema-ventas/issues)
 - 🤝 Contribuir con código mediante Pull Requests
-- 📢 Compartirlo con otros bazares y negocios
+- 📢 Compartirlo con otros bazares
 - 💬 Dejar feedback sobre tu experiencia
-
----
-
-## 🎯 Roadmap Futuro
-
-### **En consideración:**
-- [ ] Impresión de tickets de venta
-- [ ] Backup automático de datos
-- [ ] Modo oscuro para la interfaz
-- [ ] Soporte para múltiples usuarios
-- [ ] Integración con impresoras térmicas
-- [ ] App móvil complementaria
-- [ ] Sincronización en la nube (opcional)
-- [ ] Sistema de clientes frecuentes
-- [ ] Generación de códigos de barras
-
-**¿Tienes una sugerencia?** Abre un [Issue](https://github.com/rebeatle/sistema-ventas/issues) en GitHub
 
 ---
 
@@ -617,19 +516,5 @@ Si este proyecto te fue útil, considera:
 
 ---
 
-## 📚 Documentación Adicional
-
-### **Para Desarrolladores**
-Si quieres modificar o extender el sistema, consulta:
-- `config.py`: Colores, fuentes, rutas configurables
-- `logica.py`: Lógica de negocio y validaciones
-- `reportes.py`: Motor de análisis y generación de reportes
-
-### **Para Usuarios Finales**
-- Guía rápida de uso incluida en el menú Ayuda (próximamente)
-- Tutoriales en video: [pendiente]
-
----
-
-**Última actualización:** 29 de noviembre de 2024  
-**Versión:** 1.2.0
+**Última actualización:** 06 de diciembre de 2024  
+**Versión:** 2.0.0 (Limpia y Optimizada)
