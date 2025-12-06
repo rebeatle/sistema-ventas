@@ -15,7 +15,9 @@ class VentanaReporteDia:
     def __init__(self, parent):
         self.ventana = tk.Toplevel(parent)
         self.ventana.title("📊 Consultar Ventas Diarias")
-        self.ventana.geometry("950x750")
+        self.ventana.geometry("800x600")
+        self.ventana.minsize(750, 550)
+        self.ventana.resizable(True, True)
         self.ventana.configure(bg=COLORES['fondo'])
         
         self.analizador = AnalizadorVentas()
@@ -28,12 +30,14 @@ class VentanaReporteDia:
     def crear_interfaz(self):
         """Crea la interfaz"""
         # Encabezado con selector de fecha
+        # Frame de encabezado más compacto
+
         frame_header = tk.Frame(self.ventana, bg=COLORES['primario'])
         frame_header.pack(fill=tk.X)
         
         tk.Label(frame_header, text="📊 CONSULTAR VENTAS DIARIAS", 
-                font=('Arial', 16, 'bold'), bg=COLORES['primario'], 
-                fg='white').pack(pady=10)
+                font=('Arial', 14, 'bold'), bg=COLORES['primario'], 
+                fg='white').pack(pady=6)
         
         # Frame de selección de fecha
         frame_fecha = tk.Frame(frame_header, bg=COLORES['primario'])
@@ -43,7 +47,7 @@ class VentanaReporteDia:
                 font=FUENTES['normal'], bg=COLORES['primario'], 
                 fg='white').pack(side=tk.LEFT, padx=5)
         
-        self.entry_fecha = tk.Entry(frame_fecha, font=FUENTES['normal'], width=12)
+        self.entry_fecha = tk.Entry(frame_fecha, font=FUENTES['normal'], width=10)
         self.entry_fecha.insert(0, self.fecha_seleccionada)
         self.entry_fecha.pack(side=tk.LEFT, padx=5)
         
@@ -57,7 +61,7 @@ class VentanaReporteDia:
         
         # Botones rápidos
         frame_rapidos = tk.Frame(frame_header, bg=COLORES['primario'])
-        frame_rapidos.pack(pady=5)
+        frame_rapidos.pack(pady=3)
         
         botones = [
             ("Hoy", 0),
@@ -76,14 +80,14 @@ class VentanaReporteDia:
         # Label de fecha actual
         self.label_fecha = tk.Label(self.ventana, text="", 
                                    font=FUENTES['titulo'], bg=COLORES['fondo'])
-        self.label_fecha.pack(pady=10)
+        self.label_fecha.pack(pady=5)
         
         # Tabla de productos
         tk.Label(self.ventana, text="Productos Vendidos:", 
                 font=FUENTES['titulo'], bg=COLORES['fondo']).pack(pady=5, anchor='w', padx=20)
         
         frame_tabla = tk.Frame(self.ventana, bg='white')
-        frame_tabla.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        frame_tabla.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
         scroll_y = tk.Scrollbar(frame_tabla, orient=tk.VERTICAL)
         scroll_x = tk.Scrollbar(frame_tabla, orient=tk.HORIZONTAL)
@@ -91,7 +95,7 @@ class VentanaReporteDia:
         columnas = ('producto', 'cantidad', 'precio_unit', 'subtotal', 'metodos')
         self.tree = ttk.Treeview(frame_tabla, columns=columnas, show='headings',
                                 yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set,
-                                height=12)
+                                height=10)
         
         self.tree.heading('producto', text='Producto')
         self.tree.heading('cantidad', text='Cantidad Total')
@@ -114,18 +118,18 @@ class VentanaReporteDia:
         
         # Frame de resumen
         frame_resumen = tk.Frame(self.ventana, bg='#e8f5e9', relief=tk.RAISED, bd=2)
-        frame_resumen.pack(fill=tk.X, padx=20, pady=10)
+        frame_resumen.pack(fill=tk.X, padx=20, pady=5)
         
         tk.Label(frame_resumen, text="💰 RESUMEN DE PAGOS", 
-                font=FUENTES['titulo'], bg='#e8f5e9').pack(pady=10)
+                font=FUENTES['titulo'], bg='#e8f5e9').pack(pady=3)
         
         self.frame_totales = tk.Frame(frame_resumen, bg='#e8f5e9')
-        self.frame_totales.pack(pady=10)
+        self.frame_totales.pack(pady=5)
         
         self.label_total_general = tk.Label(frame_resumen, text="", 
-                                           font=('Arial', 16, 'bold'), 
+                                           font=('Arial', 14, 'bold'), 
                                            fg=COLORES['secundario'], bg='#e8f5e9')
-        self.label_total_general.pack(pady=15)
+        self.label_total_general.pack(pady=10)
         
         # Botones de acción
         frame_botones = tk.Frame(self.ventana, bg=COLORES['fondo'])
@@ -231,17 +235,17 @@ class VentanaReporteDia:
             porcentaje = self.datos['porcentajes'][metodo]
             
             frame_metodo = tk.Frame(self.frame_totales, bg='#e8f5e9')
-            frame_metodo.grid(row=i//2, column=i%2, padx=20, pady=5, sticky='w')
+            frame_metodo.grid(row=i//2, column=i%2, padx=10, pady=3, sticky='w')
             
             tk.Label(frame_metodo, text=f"{metodo}:", 
-                    font=FUENTES['normal'], bg='#e8f5e9', width=10, 
+                    font=FUENTES['normal'], bg='#e8f5e9', width=8, 
                     anchor='w').pack(side=tk.LEFT)
             tk.Label(frame_metodo, text=f"S/ {total:.2f}", 
-                    font=FUENTES['normal'], bg='#e8f5e9', width=12,
+                    font=FUENTES['normal'], bg='#e8f5e9', width=10,
                     anchor='e', fg=COLORES['secundario'] if total > 0 else 'gray').pack(side=tk.LEFT)
             tk.Label(frame_metodo, text=f"({porcentaje:.1f}%)", 
                     font=FUENTES['pequeña'], bg='#e8f5e9', 
-                    fg='gray').pack(side=tk.LEFT, padx=5)
+                    fg='gray').pack(side=tk.LEFT, padx=3)
         
         # Total general
         total_productos = len(self.datos['productos'])
@@ -317,7 +321,9 @@ class VentanaInventarioVendido:
     def __init__(self, parent):
         self.ventana = tk.Toplevel(parent)
         self.ventana.title("📋 Inventario Vendido")
-        self.ventana.geometry("1000x700")
+        self.ventana.geometry("650x600")
+        self.ventana.minsize(750, 550)
+        self.ventana.resizable(True, True)
         self.ventana.configure(bg=COLORES['fondo'])
         
         self.analizador = AnalizadorVentas()
@@ -345,34 +351,34 @@ class VentanaInventarioVendido:
         
         self.entry_fecha_inicio = tk.Entry(frame_fechas, font=FUENTES['normal'], width=12)
         self.entry_fecha_inicio.insert(0, fecha_inicio.strftime('%Y-%m-%d'))
-        self.entry_fecha_inicio.grid(row=0, column=1, padx=5, pady=5)
+        self.entry_fecha_inicio.grid(row=0, column=1, padx=3, pady=3)
         
         tk.Label(frame_fechas, text="Hasta:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=0, column=2, padx=5, pady=5)
+                bg=COLORES['fondo']).grid(row=0, column=2, padx=3, pady=3)
         
         self.entry_fecha_fin = tk.Entry(frame_fechas, font=FUENTES['normal'], width=12)
         self.entry_fecha_fin.insert(0, fecha_fin.strftime('%Y-%m-%d'))
-        self.entry_fecha_fin.grid(row=0, column=3, padx=5, pady=5)
+        self.entry_fecha_fin.grid(row=0, column=3, padx=3, pady=3)
         
         # Filtros adicionales
         frame_filtros_extra = tk.Frame(frame_filtros, bg=COLORES['fondo'])
         frame_filtros_extra.pack(pady=5)
         
         tk.Label(frame_filtros_extra, text="Categoría:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=0, column=0, padx=5, pady=5)
+                bg=COLORES['fondo']).grid(row=0, column=0, padx=3, pady=3)
         
         self.combo_categoria = ttk.Combobox(frame_filtros_extra, font=FUENTES['normal'], 
                                             width=15, state='readonly')
         self.combo_categoria.set('Todas')
-        self.combo_categoria.grid(row=0, column=1, padx=5, pady=5)
+        self.combo_categoria.grid(row=0, column=1, padx=3, pady=3)
         
         tk.Label(frame_filtros_extra, text="Producto:", font=FUENTES['normal'],
-                bg=COLORES['fondo']).grid(row=0, column=2, padx=5, pady=5)
+                bg=COLORES['fondo']).grid(row=0, column=2, padx=3, pady=3)
         
         self.combo_producto = ttk.Combobox(frame_filtros_extra, font=FUENTES['normal'], 
                                            width=25, state='readonly')
         self.combo_producto.set('Todos')
-        self.combo_producto.grid(row=0, column=3, padx=5, pady=5)
+        self.combo_producto.grid(row=0, column=3, padx=3, pady=3)
         
         # Botones
         frame_botones = tk.Frame(frame_filtros, bg=COLORES['fondo'])
@@ -384,7 +390,7 @@ class VentanaInventarioVendido:
         
         tk.Button(frame_botones, text="Exportar CSV", command=self.exportar,
                  bg=COLORES['secundario'], fg='white', font=FUENTES['normal'],
-                 cursor='hand2', padx=20).pack(side=tk.LEFT, padx=5)
+                 cursor='hand2', padx=20).pack(side=tk.LEFT, padx=3)
         
         # Tabla de resultados
         frame_tabla = tk.Frame(self.ventana, bg='white')

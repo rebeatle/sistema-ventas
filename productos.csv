@@ -1,11 +1,81 @@
 codigo,nombre,precio,categoria,stock
-001,Coca Cola 500ml,3.5,Bebidas,3
-002,Inca Kola 500ml,4.5,Bebidas,0
-003,Agua San Luis 625ml,2.0,Bebidas,20
-004,Galletas Oreo,4.5,Snacks,0
-005,Papas Lays,5.0,Snacks,0
-006,Chocolate Sublime,2.5,Dulces,1
-007,Chicles Trident,1.5,Dulces,0
-008,Pan Integral,6.0,Panadería,1
-da,222,121.0,Panadería,0
-5,GUARANA,1.5,Bebidas,0
+001,Inca Kola,3.00,Bebidas,0
+002,Coca Cola,3.00,Bebidas,0
+003,Guarana,2.50,Bebidas,0
+004,Fanta,2.50,Bebidas,0
+005,Cielo,1.50,Bebidas,0
+006,Sporade,2.50,Bebidas,0
+007,Agua San Luis,1.50,Bebidas,0
+008,Picaras,1.00,Snacks,0
+009,Lays,2.00,Snacks,0
+010,Lays,2.20,Snacks,0
+011,Cheese Tris,1.70,Snacks,0
+012,Cheetos,1.70,Snacks,0
+013,Chifles,2.00,Snacks,0
+014,Cuates,1.50,Snacks,0
+015,Piqueos,2.50,Snacks,0
+016,Doritos,2.50,Snacks,0
+017,Chizito,1.50,Snacks,0
+018,Tortees,2.50,Snacks,0
+019,Piqueo,2.50,Snacks,0
+020,Soda,1.00,Snacks,0
+021,Roscas,2.00,Snacks,0
+022,Blackout,1.00,Galletas,0
+023,Nik,1.70,Galletas,0
+024,Ritz,1.70,Galletas,0
+025,Margarita,2.50,Galletas,0
+030,Limpiatipo,3.00,Útiles,0
+031,Tizas,3.00,Útiles,0
+032,Plumón Pizarra,3.00,Útiles,0
+033,Silicona,3.50,Útiles,0
+034,Lápiz Mongol,1.20,Útiles,0
+035,Lápiz Artesco,1.00,Útiles,0
+036,Lápiz Técnico,1.50,Útiles,0
+037,Lápiz Faber,1.50,Útiles,0
+038,Lapicero Bicolor,1.50,Útiles,0
+039,Lapicero Stabilo,1.50,Útiles,0
+040,Lapicero Económico,1.00,Útiles,0
+041,Borrador,1.00,Útiles,0
+042,Goma David,1.50,Útiles,0
+043,Goma Barra Mediano,2.50,Útiles,0
+044,Masking Tape,3.00,Útiles,0
+045,Cinta Chica,1.00,Útiles,0
+046,Cinta Mediana,2.00,Útiles,0
+047,Cinta de Embalaje,3.50,Útiles,0
+048,Pilot,3.50,Útiles,0
+049,Sobre Manila,0.70,Útiles,0
+050,Folder,0.70,Útiles,0
+051,Almohadilla Dactilar,5.00,Útiles,0
+052,Huellero,5.00,Útiles,0
+053,Cartulina Color,1.50,Útiles,0
+054,Mica,1.00,Útiles,0
+055,Cuaderno 50 Hojas,2.50,Útiles,0
+056,Cuaderno A4,5.00,Útiles,0
+057,Tajador,3.00,Útiles,0
+058,Libreta,2.50,Útiles,0
+059,Compás,2.50,Útiles,0
+070,Copia Color,0.50,Servicios,0
+071,Copia BYN,0.20,Servicios,0
+072,Copia DNI BYN,0.30,Servicios,0
+073,Copia DNI Color,1.00,Servicios,0
+074,Escaneo,0.50,Servicios,0
+075,Impresión Color,1.00,Servicios,0
+076,Impresión BYN,0.50,Servicios,0
+077,Impresión Papel Fotográfico,5.00,Servicios,0
+078,Impresión Sticker,5.00,Servicios,0
+090,Mini Sandwich,1.50,Helados,0
+091,Sandwich Grande,3.50,Helados,0
+092,Bombones Caja,5.00,Helados,0
+093,Alaska Hielo,2.50,Helados,0
+094,Alaska Maracumango,3.00,Helados,0
+095,Sin Parar Taper,5.00,Helados,0
+096,Copa,5.00,Helados,0
+097,Frio Rico Cono,5.00,Helados,0
+098,Frio Rico Paleta,5.00,Helados,0
+099,Copa Cabana,2.50,Helados,0
+100,Trika,1.50,Dulces,0
+101,BB Chicha,1.50,Dulces,0
+102,Turbo,1.50,Dulces,0
+103,Sublime Grande,3.50,Dulces,0
+104,Jet,2.50,Dulces,0
+105,Kit Kat,5.00,Dulces,0

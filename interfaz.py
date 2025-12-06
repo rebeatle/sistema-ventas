@@ -15,7 +15,9 @@ class VentanaPrincipal:
     def __init__(self, root):
         self.root = root
         self.root.title("Sistema de Bazar")
-        self.root.geometry("900x700")
+        self.root.geometry("850x600")  # Compacto inicial
+        self.root.minsize(800, 550)    # Mínimo funcional
+        self.root.resizable(True, True) # Redimensionable
         self.root.configure(bg=COLORES['fondo'])
         
         # Inicializar gestores
@@ -484,9 +486,12 @@ class VentanaPrincipal:
         """Abre ventana para agregar producto de precio variable Y guardarlo en productos.csv"""
         ventana = tk.Toplevel(self.root)
         ventana.title("Agregar Producto Variable")
-        ventana.geometry("420x500")
+        ventana.geometry("400x300")
+        ventana.geometry("380x280")
+        ventana.minsize(350, 250)
+        ventana.resizable(True, True)
         ventana.configure(bg=COLORES['fondo'])
-        ventana.resizable(False, False)
+
         
         ventana.transient(self.root)
         ventana.grab_set()
@@ -518,7 +523,7 @@ class VentanaPrincipal:
         
         # Frame para campos
         frame_campos = tk.Frame(scrollable_frame, bg=COLORES['fondo'])
-        frame_campos.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
+        frame_campos.pack(pady=5, padx=10, fill=tk.BOTH, expand=True)
         
         # Nombre del producto
         tk.Label(frame_campos, text="Nombre del Producto:", font=FUENTES['normal'],
