@@ -27,6 +27,7 @@ RUTA_BASE = obtener_ruta_base()
 RUTA_PRODUCTOS = os.path.join(RUTA_BASE, "productos.csv")
 RUTA_VENTAS = os.path.join(RUTA_BASE, "ventas_diarias")  # ✅ CAMBIO: Nueva carpeta
 RUTA_CONFIG_STOCK = os.path.join(RUTA_BASE, "config_stock.txt")
+RUTA_TEMPORAL = os.path.join(RUTA_BASE, "ventas_temporales.json")  # ✅ NUEVA LÍNEA
 
 # Crear carpeta de ventas si no existe
 if not os.path.exists(RUTA_VENTAS):

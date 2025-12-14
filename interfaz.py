@@ -35,10 +35,36 @@ class VentanaPrincipal:
         
         # Actualizar
         self.actualizar_productos_dict()
-        
+        # Recuperar ventas temporales si existen
+        self.recuperar_ventas_temporales()
         # Manejar cierre de ventana
         self.root.protocol("WM_DELETE_WINDOW", self.al_cerrar)
-    
+
+    def recuperar_ventas_temporales(self):
+        """Recupera ventas de sesión anterior si existen"""
+        exito, datos = self.gestor_ventas.cargar_temporal()
+        
+        if exito and datos:
+            # Actualizar interfaz con las ventas recuperadas
+            self.actualizar_lista()
+            self.actualizar_totales()
+            
+            # Mensaje informativo discreto
+            timestamp = datos.get('timestamp', 'desconocida')
+            total = datos.get('total', 0)
+            cantidad = datos.get('cantidad_productos', 0)
+            
+            mensaje = (
+                f"✅ Ventas Recuperadas\n\n"
+                f"Se recuperaron {cantidad} producto(s) de la sesión anterior\n"
+                f"Fecha: {timestamp}\n"
+                f"Total: S/ {total:.2f}\n\n"
+                f"Puede continuar agregando ventas o cerrar caja."
+            )
+            
+            messagebox.showinfo("Recuperación Automática", mensaje)
+
+
     def al_cerrar(self):
         """Maneja el cierre de la ventana"""
         if self.gestor_ventas.ventas_actuales:
@@ -62,6 +88,8 @@ class VentanaPrincipal:
                     messagebox.showerror("Error", resultado)
                     return
             else:  # No - Solo cerrar
+                # ✅ MODIFICADO: Limpiar temporal al salir sin guardar
+                self.gestor_ventas.limpiar_temporal()
                 self.root.destroy()
         else:
             self.root.destroy()
@@ -337,6 +365,9 @@ class VentanaPrincipal:
         self.actualizar_totales()
         self.actualizar_productos_dict()
         
+        # ✅ NUEVO: Autoguardar en segundo plano
+        self.gestor_ventas.autoguardar_temporal()
+
         # Limpiar selección
         self.entry_busqueda.delete(0, tk.END)
         self.spin_cantidad.delete(0, tk.END)
@@ -390,6 +421,9 @@ class VentanaPrincipal:
             self.actualizar_totales()
             self.actualizar_productos_dict()
     
+            # ✅ NUEVO: Autoguardar después de eliminar
+            self.gestor_ventas.autoguardar_temporal()
+
     def actualizar_lista(self):
         """Actualiza la lista visual de ventas"""
         for widget in self.frame_productos.winfo_children():
@@ -627,6 +661,9 @@ class VentanaPrincipal:
             self.agregar_item_lista(venta, len(self.gestor_ventas.ventas_actuales) - 1)
             self.actualizar_totales()
             
+            # ✅ NUEVO: Autoguardar en segundo plano
+            self.gestor_ventas.autoguardar_temporal()
+
             ventana.destroy()
             messagebox.showinfo("Éxito", 
                               f"✅ Producto '{nombre}' agregado al catálogo\n"

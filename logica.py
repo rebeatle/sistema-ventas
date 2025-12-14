@@ -6,7 +6,7 @@ import csv
 import os
 from datetime import datetime
 from config import *
-
+import json 
 class GestorProductos:
     """Maneja la carga, guardado y manipulación de productos"""
     
@@ -195,7 +195,66 @@ class GestorVentas:
         }
         self.ventas_actuales.append(venta)
         return venta
-    
+    def autoguardar_temporal(self):
+        """Guarda automáticamente las ventas en archivo temporal (en segundo plano)"""
+        if not self.ventas_actuales:
+            return
+        
+        try:
+            # Calcular totales para el resumen
+            totales = self.calcular_totales()
+            
+            datos_temporal = {
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'total': totales['general'],
+                'cantidad_productos': len(self.ventas_actuales),
+                'ventas': self.ventas_actuales
+            }
+            
+            with open(RUTA_TEMPORAL, 'w', encoding='utf-8') as f:
+                json.dump(datos_temporal, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            # Silencioso - no interrumpir flujo normal si falla
+            print(f"Error en autoguardado temporal: {e}") 
+
+
+    def cargar_temporal(self):
+        """
+        Carga ventas desde archivo temporal si existe
+        Returns: (exito: bool, datos: dict o None)
+        """
+        if not os.path.exists(RUTA_TEMPORAL):
+            return False, None
+        
+        try:
+            with open(RUTA_TEMPORAL, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+            
+            # Verificar que tenga ventas
+            if not datos.get('ventas'):
+                self.limpiar_temporal()
+                return False, None
+            
+            # Cargar ventas (sin modificar stock)
+            self.ventas_actuales = datos['ventas']
+            
+            return True, datos
+        except Exception as e:
+            print(f"Error al cargar temporal: {e}")
+            return False, None
+
+
+
+    def limpiar_temporal(self):
+        """Elimina el archivo temporal"""
+        try:
+            if os.path.exists(RUTA_TEMPORAL):
+                os.remove(RUTA_TEMPORAL)
+        except Exception as e:
+            print(f"Error al limpiar temporal: {e}")
+
+
+
     def eliminar_venta(self, indice):
         """Elimina una venta de la lista actual"""
         if 0 <= indice < len(self.ventas_actuales):
@@ -248,6 +307,8 @@ class GestorVentas:
             # Limpiar lista automáticamente después de guardar
             self.ventas_actuales = []
             
+            self.limpiar_temporal()
+            
             return True, {
                 'archivo': nombre_archivo,
                 'total': totales['general'],
@@ -261,6 +322,7 @@ class GestorVentas:
     def limpiar_ventas(self):
         """Limpia la lista de ventas actuales (EMERGENCIA)"""
         self.ventas_actuales = []
+        self.limpiar_temporal() 
     
     def obtener_ventas(self):
         """Retorna la lista de ventas actuales"""
