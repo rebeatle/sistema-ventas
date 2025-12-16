@@ -7,6 +7,17 @@ import os
 from datetime import datetime
 from config import *
 import json 
+
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+    OPENPYXL_DISPONIBLE = True
+except ImportError:
+    OPENPYXL_DISPONIBLE = False
+    print("⚠️ Advertencia: openpyxl no está instalado. No se generarán archivos Excel.")
+    print("   Para instalar: pip install openpyxl")
+
+
 class GestorProductos:
     """Maneja la carga, guardado y manipulación de productos"""
     
@@ -276,7 +287,7 @@ class GestorVentas:
         }
     
     def guardar_ventas(self):
-        """Guarda las ventas actuales EN EL ARCHIVO DEFINITIVO y limpia la lista"""
+        """Guarda las ventas EN CSV (Excel_app) y EXCEL (Excel_registro)"""
         if not self.ventas_actuales:
             return False, "No hay ventas para guardar"
         
@@ -284,11 +295,12 @@ class GestorVentas:
         fecha_str = fecha_actual.strftime('%Y-%m-%d')
         hora_str = fecha_actual.strftime('%H:%M:%S')
         
-        nombre_archivo = os.path.join(RUTA_VENTAS, f'ventas_{fecha_str}.csv')
-        archivo_existe = os.path.exists(nombre_archivo)
+        # 1. GUARDAR CSV EN Excel_app (para el programa)
+        nombre_csv = os.path.join(RUTA_VENTAS_APP, f'ventas_{fecha_str}.csv')
+        archivo_existe = os.path.exists(nombre_csv)
         
         try:
-            with open(nombre_archivo, 'a', newline='', encoding='utf-8') as archivo:
+            with open(nombre_csv, 'a', newline='', encoding='utf-8') as archivo:
                 escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS_VENTAS)
                 
                 if not archivo_existe:
@@ -299,25 +311,118 @@ class GestorVentas:
                     venta['fecha'] = fecha_str
                     venta['hora'] = hora_str
                     escritor.writerow(venta)
-            
-            # Calcular totales antes de limpiar
-            totales = self.calcular_totales()
-            num_productos = len(self.ventas_actuales)
-            
-            # Limpiar lista automáticamente después de guardar
-            self.ventas_actuales = []
-            
-            self.limpiar_temporal()
-            
-            return True, {
-                'archivo': nombre_archivo,
-                'total': totales['general'],
-                'efectivo': totales['efectivo'],
-                'virtual': totales['virtual'],
-                'productos': num_productos
-            }
         except Exception as e:
-            return False, f"Error al guardar ventas: {e}"
+            return False, f"Error al guardar CSV: {e}"
+        
+        # 2. GENERAR EXCEL EN Excel_registro (para visualización)
+        if OPENPYXL_DISPONIBLE:
+            try:
+                self._generar_excel_visual(fecha_str)
+            except Exception as e:
+                print(f"⚠️ Error al generar Excel visual: {e}")
+        
+        # Calcular totales antes de limpiar
+        totales = self.calcular_totales()
+        num_productos = len(self.ventas_actuales)
+        
+        # Limpiar lista automáticamente después de guardar
+        self.ventas_actuales = []
+        
+        return True, {
+            'archivo': nombre_csv,
+            'total': totales['general'],
+            'efectivo': totales['efectivo'],
+            'virtual': totales['virtual'],
+            'productos': num_productos
+        }
+    
+    def _generar_excel_visual(self, fecha_str):
+        """Genera un Excel visual para registro humano"""
+        nombre_excel = os.path.join(RUTA_VENTAS_REGISTRO, f'ventas_{fecha_str}.xlsx')
+        
+        # Agrupar ventas por método de pago
+        ventas_efectivo = []
+        ventas_digitales = []
+        
+        for venta in self.ventas_actuales:
+            if venta['metodo_pago'] == 'E':
+                # Buscar si ya existe este producto en efectivo
+                encontrado = False
+                for v in ventas_efectivo:
+                    if v['nombre'] == venta['nombre']:
+                        v['cantidad'] += venta['cantidad']
+                        v['subtotal'] += venta['subtotal']
+                        encontrado = True
+                        break
+                if not encontrado:
+                    ventas_efectivo.append({
+                        'nombre': venta['nombre'],
+                        'cantidad': venta['cantidad'],
+                        'subtotal': venta['subtotal']
+                    })
+            else:
+                # Método digital
+                ventas_digitales.append({
+                    'metodo': METODOS_PAGO.get(venta['metodo_pago'], 'Otros'),
+                    'monto': venta['subtotal']
+                })
+        
+        # Crear Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Ventas"
+        
+        # Anchos de columna
+        ws.column_dimensions['A'].width = 30
+        ws.column_dimensions['B'].width = 15
+        ws.column_dimensions['C'].width = 5
+        ws.column_dimensions['D'].width = 20
+        ws.column_dimensions['E'].width = 15
+        
+        # ENCABEZADOS
+        ws['A1'] = 'Productos'
+        ws['B1'] = 'Efectivo'
+        ws['D1'] = ' '
+        ws['E1'] = 'Yape / Plin'
+        
+        # Formato encabezados (opcional, simple)
+        for cell in ['A1', 'B1', 'D1', 'E1']:
+            ws[cell].font = Font(bold=True)
+            ws[cell].alignment = Alignment(horizontal='center')
+        
+        # PRODUCTOS (EFECTIVO)
+        fila = 2
+        total_efectivo = 0
+        for v in ventas_efectivo:
+            ws[f'A{fila}'] = f"{v['nombre']} x{v['cantidad']}"
+            ws[f'B{fila}'] = f"S/ {v['subtotal']:.2f}"
+            ws[f'B{fila}'].alignment = Alignment(horizontal='right')
+            total_efectivo += v['subtotal']
+            fila += 1
+        
+        # PAGOS DIGITALES
+        fila_digital = 2
+        total_digital = 0
+        for v in ventas_digitales:
+            ws[f'E{fila_digital}'] = f"S/ {v['monto']:.2f}"
+            ws[f'E{fila_digital}'].alignment = Alignment(horizontal='right')
+            total_digital += v['monto']
+            fila_digital += 1
+        
+        # TOTALES
+        fila_total = max(fila, fila_digital) + 1
+        ws[f'A{fila_total}'] = 'TOTAL'
+        ws[f'B{fila_total}'] = f"S/ {total_efectivo:.2f}"
+        ws[f'E{fila_total}'] = f"S/ {total_digital:.2f}"
+        
+        # Formato totales (opcional, simple)
+        for cell in [f'A{fila_total}', f'B{fila_total}', f'E{fila_total}']:
+            ws[cell].font = Font(bold=True)
+            ws[cell].alignment = Alignment(horizontal='right' if cell != f'A{fila_total}' else 'left')
+        
+        # Guardar
+        wb.save(nombre_excel)
+        print(f"✅ Excel visual guardado en: {nombre_excel}")
     
     def limpiar_ventas(self):
         """Limpia la lista de ventas actuales (EMERGENCIA)"""

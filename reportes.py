@@ -19,7 +19,7 @@ class AnalizadorVentas:
         """Carga ventas de una fecha específica (YYYY-MM-DD)"""
         self.ventas = []
         
-        nombre_archivo = os.path.join(RUTA_VENTAS, f'ventas_{fecha}.csv')
+        nombre_archivo = os.path.join(RUTA_VENTAS_APP, f'ventas_{fecha}.csv')
         
         if not os.path.exists(nombre_archivo):
             return False
@@ -43,7 +43,7 @@ class AnalizadorVentas:
         """Carga todas las ventas dentro de un rango de fechas"""
         self.ventas = []
         
-        if not os.path.exists(RUTA_VENTAS):
+        if not os.path.exists(RUTA_VENTAS_APP):
             return False
         
         # Convertir strings a datetime
@@ -57,7 +57,7 @@ class AnalizadorVentas:
         fecha_actual = inicio
         while fecha_actual <= fin:
             fecha_str = fecha_actual.strftime('%Y-%m-%d')
-            archivo = os.path.join(RUTA_VENTAS, f'ventas_{fecha_str}.csv')
+            archivo = os.path.join(RUTA_VENTAS_APP, f'ventas_{fecha_str}.csv')
             
             if os.path.exists(archivo):
                 try:

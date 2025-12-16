@@ -25,13 +25,19 @@ def obtener_ruta_base():
 # Rutas de archivos
 RUTA_BASE = obtener_ruta_base()
 RUTA_PRODUCTOS = os.path.join(RUTA_BASE, "productos.csv")
-RUTA_VENTAS = os.path.join(RUTA_BASE, "ventas_diarias")  # ✅ CAMBIO: Nueva carpeta
+RUTA_VENTAS = os.path.join(RUTA_BASE, "ventas_diarias")  # Carpeta principal
+RUTA_VENTAS_APP = os.path.join(RUTA_VENTAS, "Excel_app")  # CSV para el programa
+RUTA_VENTAS_REGISTRO = os.path.join(RUTA_VENTAS, "Excel_registro")  # Excel visual
 RUTA_CONFIG_STOCK = os.path.join(RUTA_BASE, "config_stock.txt")
-RUTA_TEMPORAL = os.path.join(RUTA_BASE, "ventas_temporales.json")  # ✅ NUEVA LÍNEA
+RUTA_TEMPORAL = os.path.join(RUTA_BASE, "ventas_temporales.json")  # temp para guardar ventas en curso
 
-# Crear carpeta de ventas si no existe
+# Crear carpetas si no existen
 if not os.path.exists(RUTA_VENTAS):
     os.makedirs(RUTA_VENTAS)
+if not os.path.exists(RUTA_VENTAS_APP):
+    os.makedirs(RUTA_VENTAS_APP)
+if not os.path.exists(RUTA_VENTAS_REGISTRO):
+    os.makedirs(RUTA_VENTAS_REGISTRO)
 
 # Métodos de pago
 METODOS_PAGO = {
